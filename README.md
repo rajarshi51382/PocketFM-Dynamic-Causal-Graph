@@ -11,8 +11,7 @@ Each dialogue turn runs in two phases:
 1. **Update phase** - structured state transitions via causal propagation (belief revision, emotional update, relationship update).
 2. **Act phase** - conditioned dialogue generation based on the updated character state.
 
-The belief revision system uses a log-odds framework for numerically stable, additive evidence integration. See `pocketfm_shikhar (10).pdf` for the full technical specification.
-
+The belief revision system uses a log-odds framework for numerically stable, additive evidence integration.
 ## Repository Structure
 
 ```

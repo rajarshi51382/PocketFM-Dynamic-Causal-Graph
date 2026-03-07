@@ -638,7 +638,7 @@ class EventFrame:
     ):
         self.propositions: List[str] = list(propositions or [])
         self.entities: List[str] = list(entities or [])
-        self.speaker: str = str(speaker)
+        self.speaker = None if speaker is None else str(speaker)
         self.emotional_tone: str = str(emotional_tone)
         self.confidence: float = _validate_unit(confidence, "confidence")
         self.turn_index: int = int(turn_index)

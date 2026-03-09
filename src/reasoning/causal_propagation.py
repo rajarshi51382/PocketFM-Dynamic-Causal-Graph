@@ -19,6 +19,7 @@ import math
 from typing import Dict, List, Any
 
 from core.data_structures import CharacterState, BeliefNode
+from reasoning.belief_update import resolve_belief_conflicts
 
 def propagate_causal_effects(
     state: CharacterState,
@@ -90,4 +91,7 @@ def propagate_causal_effects(
         # Mark source if significant update
         if abs(delta) > 0.1:
             node.add_evidence(f"inference_from_graph")
+
+    # Ensure inferred beliefs are logically consistent
+    resolve_belief_conflicts(state.beliefs)
 

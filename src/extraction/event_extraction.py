@@ -146,9 +146,9 @@ def _extract_event_rules(user_message: str) -> EventFrame:
             else:
                 propositions.append(prop)
 
-    # 3. Entity extraction
-    entities = list(set(re.findall(r'\b[A-Z][a-z]+\b', message)))
-
+    # 3. Entity extraction - improved to catch Proper Nouns and snake_case_entities
+    entities = list(set(re.findall(r'\b(?:[A-Z][a-z]+(?:_[A-Z][a-z]+)*|[A-Z]{2,})\b', message)))
+    
     # 4. Tone detection
     detected_tone = "neutral"
     message_lower = message.lower()

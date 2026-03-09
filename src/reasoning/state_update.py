@@ -192,52 +192,35 @@ def update_relationship_state(state: CharacterState, event: EventFrame) -> Chara
 def update_intentions(state: CharacterState) -> CharacterState:
     """
     Derive character intentions from current beliefs and emotional state.
-
-    High-confidence positive beliefs generate approach intentions.
-    High-confidence negative beliefs generate avoidance intentions.
-    High arousal promotes assertive or reactive intentions.
-
-    Preconditions
-    -------------
-    state : CharacterState
-
-    Procedure
-    ---------
-    1. Analyze current belief nodes
-    2. Consider emotional state
-    3. Derive likely goals or motivations
-    4. Update intention representation
-
-    Postconditions
-    --------------
-    state.intentions updated
-
-    Parameters
-    ----------
-    state : CharacterState
-
-    Returns
-    -------
-    CharacterState
-        The same object, modified in place.
     """
     intentions = []
 
+    # 1. Belief-driven intentions
     for key, belief in state.beliefs.items():
-        prob = 1.0 / (1.0 + math.exp(-belief.log_odds))
+        prob = belief.probability
         if prob > 0.85:
-            intentions.append(f"maintain_{key}")
+            # If we believe something positive, we want to maintain it
+            if "danger" not in key and "locked" not in key:
+                intentions.append(f"protect_{key}")
         elif prob < 0.15:
-            intentions.append(f"avoid_{key}")
+            # If we strongly disbelieve something, we might want to investigate
+            intentions.append(f"investigate_{key}")
 
+    # 2. Emotion-driven intentions
     if state.emotions.arousal > 0.7:
-        if state.emotions.valence < 0:
-            intentions.append("retreat_safety")
-        else:
-            intentions.append("act_boldly")
+        if state.emotions.valence < -0.3:
+            intentions.append("confront_threat")
+        elif state.emotions.valence > 0.3:
+            intentions.append("celebrate_success")
+            
+    # 3. Trait-driven intentions
+    if state.traits.get("curiosity", 0.0) > 0.5:
+        intentions.append("explore_surroundings")
+    if state.traits.get("bravery", 0.0) < 0.2 and state.emotions.valence < 0:
+        intentions.append("seek_reassurance")
 
     # Limit to top 3 intentions to avoid clutter
-    state.intentions = intentions[:3]
+    state.intentions = list(dict.fromkeys(intentions))[:3]
     return state
 
 

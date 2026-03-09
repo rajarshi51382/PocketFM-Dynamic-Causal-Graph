@@ -28,10 +28,6 @@ def directional_alignment(event: EventFrame, belief: BeliefNode) -> int:
     """
     Determine whether an event supports or contradicts a belief.
 
-    Compares each proposition in the event frame against the belief
-    proposition using a deterministic predicate comparison. Negations
-    are expressed with the prefix "not_" or the tilde prefix "~".
-
     Preconditions
     -------------
     event : EventFrame
@@ -39,38 +35,16 @@ def directional_alignment(event: EventFrame, belief: BeliefNode) -> int:
 
     Procedure
     ---------
-    1. Compare event propositions with belief proposition
-    2. Detect semantic agreement or contradiction
+    1. Use EventFrame's built-in alignment checks.
 
     Postconditions
     --------------
-    Returns
-        +1 if event supports belief
-        -1 if event contradicts belief
-         0 if unrelated
-
-    Parameters
-    ----------
-    event : EventFrame
-    belief : BeliefNode
-
-    Returns
-    -------
-    int
-        +1 if the event asserts the belief proposition.
-        -1 if the event asserts its negation.
-         0 if unrelated.
+    Returns +1 (supports), -1 (contradicts), or 0 (unrelated)
     """
-    proposition = belief.proposition.strip().lower()
-    negation = _negation_of(proposition)
-
-    for p in event.propositions:
-        p_norm = p.strip().lower()
-        if p_norm == proposition:
-            return +1
-        if p_norm == negation or _negation_of(p_norm) == proposition:
-            return -1
-
+    if event.asserts(belief.proposition):
+        return +1
+    if event.denies(belief.proposition):
+        return -1
     return 0
 
 
@@ -249,7 +223,8 @@ def apply_belief_updates(
     Pipeline:
     1. Compute source credibility from the event speaker.
     2. Apply the log-odds update to every belief that the event touches.
-    3. Resolve any resulting contradictions via pairwise normalisation.
+    3. Discovery: Create new BeliefNodes for novel propositions in the event.
+    4. Resolve any resulting contradictions via pairwise normalisation.
 
     Preconditions
     -------------
@@ -261,7 +236,8 @@ def apply_belief_updates(
     1. Compute credibility
     2. Identify affected beliefs
     3. Apply log-odds updates
-    4. Resolve conflicts
+    4. Discover new beliefs from novel propositions
+    5. Resolve conflicts
 
     Postconditions
     --------------
@@ -279,6 +255,7 @@ def apply_belief_updates(
     """
     credibility = compute_source_credibility(event, state)
 
+    # 1. Update existing beliefs
     for belief in state.beliefs.values():
         update_belief_log_odds(
             belief,
@@ -287,6 +264,30 @@ def apply_belief_updates(
             lambda_base,
             narrative_importance,
         )
+
+    # 2. Discovery: add new beliefs for propositions in the event not yet tracked
+    for prop in event.propositions:
+        # Normalize for check
+        p_norm = prop.strip().lower()
+        if p_norm.startswith("not_"):
+            base_prop = p_norm[4:]
+        elif p_norm.startswith("~"):
+            base_prop = p_norm[1:]
+        else:
+            base_prop = p_norm
+            
+        if base_prop not in state.beliefs and f"not_{base_prop}" not in state.beliefs:
+            # Create new belief node with neutral prior (log_odds=0.0)
+            # then apply the update immediately
+            new_node = BeliefNode(proposition=base_prop, log_odds=0.0)
+            state.add_belief(new_node)
+            update_belief_log_odds(
+                new_node,
+                event,
+                credibility,
+                lambda_base,
+                narrative_importance,
+            )
 
     resolve_belief_conflicts(state.beliefs)
 

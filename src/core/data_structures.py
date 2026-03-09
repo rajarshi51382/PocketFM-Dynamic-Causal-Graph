@@ -648,11 +648,30 @@ class EventFrame:
 
     def asserts(self, proposition: str) -> bool:
         """True if this event explicitly asserts *proposition*."""
-        return proposition in self.propositions
+        p_norm = proposition.strip().lower()
+        return p_norm in [p.strip().lower() for p in self.propositions]
 
     def denies(self, proposition: str) -> bool:
-        """True if event asserts the negation (prefixed with NOT:)."""
-        return f"NOT:{proposition}" in self.propositions
+        """True if event asserts the negation (prefixed with not_ or ~)."""
+        p_norm = proposition.strip().lower()
+        neg1 = f"not_{p_norm}"
+        neg2 = f"~{p_norm}"
+        
+        # Also check if the input proposition is already negated
+        if p_norm.startswith("not_"):
+            pos = p_norm[4:]
+        elif p_norm.startswith("~"):
+            pos = p_norm[1:]
+        else:
+            pos = None
+
+        for p in self.propositions:
+            pn = p.strip().lower()
+            if pn == neg1 or pn == neg2:
+                return True
+            if pos and pn == pos:
+                return True
+        return False
 
     def references_entity(self, entity_id: str) -> bool:
         return entity_id in self.entities

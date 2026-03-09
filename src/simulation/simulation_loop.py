@@ -88,8 +88,9 @@ def simulation_turn(
 
     is_valid, violations = verify_dialogue(response, character_state)
     if not is_valid:
-        response = "I'm not sure that would be consistent with what I know."
-
+        reason = violations[0] if violations else "unknown_violation"
+        response = f"I'm not sure that would be consistent with what I know. [{reason}]"
+    
     return response
 
 

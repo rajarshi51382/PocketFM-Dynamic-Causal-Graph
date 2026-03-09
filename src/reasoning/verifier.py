@@ -1,8 +1,12 @@
 """
-Verifier module.
+This is a lightweight MVP verifier.
 
-Runs lightweight consistency checks on generated dialogue before
-the response is returned to the user.
+Current checks:
+- contradiction with high-confidence beliefs
+- explicit world-constraint violations
+- simple temporal leakage markers
+
+This is not yet a full semantic verifier or planner-critic loop.
 """
 
 from core.data_structures import CharacterState

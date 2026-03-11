@@ -186,14 +186,20 @@ def resolve_belief_conflicts(beliefs: Dict[str, BeliefNode]) -> Dict[str, Belief
         The same dictionary with conflicting pairs resolved.
     """
     resolved: set = set()
+    
+    # Create a mapping from lowercase keys to actual keys
+    key_map = {k.strip().lower(): k for k in beliefs.keys()}
 
-    for prop in list(beliefs.keys()):
-        negation = _negation_of(prop)
-        pair = frozenset({prop, negation})
+    for prop_lower in list(key_map.keys()):
+        negation_lower = _negation_of(prop_lower)
+        pair = frozenset({prop_lower, negation_lower})
 
-        if negation in beliefs and pair not in resolved:
-            b_pos = beliefs[prop]
-            b_neg = beliefs[negation]
+        if negation_lower in key_map and pair not in resolved:
+            prop_actual = key_map[prop_lower]
+            neg_actual = key_map[negation_lower]
+            
+            b_pos = beliefs[prop_actual]
+            b_neg = beliefs[neg_actual]
 
             prob_pos = _log_odds_to_prob(b_pos.log_odds)
             prob_neg = _log_odds_to_prob(b_neg.log_odds)

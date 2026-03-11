@@ -36,6 +36,16 @@ def _validate_signed_unit(value: float, name: str) -> float:
         raise ValueError(f"{name} must be finite, got {v}")
     return _clamp(v, -1.0, 1.0)
 
+
+def _negation_of(proposition: str) -> str:
+    """Return the canonical negation of a proposition string."""
+    p = proposition.strip().lower()
+    if p.startswith("not_"):
+        return p[4:]
+    if p.startswith("~"):
+        return p[1:]
+    return "not_" + p
+
 # ===================================================================
 # TraitState
 # ===================================================================
@@ -362,8 +372,13 @@ class CharacterState:
         self.character_id: str = str(character_id)
         self.traits: TraitState = traits or TraitState(traits={})
         self.emotions: EmotionState = emotions or EmotionState()
-        self.beliefs: Dict[str, BeliefNode] = dict(beliefs or {})
-        self.belief_schema: Set[str] = {k.strip().lower() for k in self.beliefs.keys()}
+        
+        # Canonicalize belief keys to lowercase
+        self.beliefs: Dict[str, BeliefNode] = {
+            k.strip().lower(): v for k, v in (beliefs or {}).items()
+        }
+        self.belief_schema: Set[str] = set(self.beliefs.keys())
+        
         self.relationships: Dict[str, RelationshipState] = dict(relationships or {})
         self.intentions: List[str] = list(intentions or [])
         self.timeline_index: int = int(timeline_index)
@@ -375,11 +390,13 @@ class CharacterState:
 
     def add_belief(self, belief: BeliefNode) -> None:
         """Insert or overwrite a belief keyed by its proposition."""
-        self.beliefs[belief.proposition] = belief
-        self.belief_schema.add(belief.proposition.strip().lower())
+        key = belief.proposition.strip().lower()
+        self.beliefs[key] = belief
+        self.belief_schema.add(key)
 
     def get_belief(self, proposition: str) -> Optional[BeliefNode]:
-        return self.beliefs.get(proposition)
+        """Retrieve a belief by its proposition (case-insensitive)."""
+        return self.beliefs.get(proposition.strip().lower())
 
     def high_confidence_beliefs(self, threshold: float = 0.7) -> List[BeliefNode]:
         """Return beliefs with probability above *threshold*."""
@@ -387,11 +404,34 @@ class CharacterState:
     
     def add_causal_link(self, antecedent: str, consequent: str, weight: float = 1.0) -> None:
         """Add a causal dependency: change in antecedent propagates to consequent."""
+        # Ensure antecedent and consequent exist as nodes if they are valid.
+        # This prevents propagation from skipping them due to missing nodes.
+        for prop in [antecedent, consequent]:
+            if prop not in self.beliefs:
+                # If we don't have the node, initialize it.
+                # If its negation exists, use its negative log-odds to maintain consistency.
+                neg = _negation_of(prop)
+                initial_log_odds = 0.0
+                if neg in self.beliefs:
+                    initial_log_odds = -self.beliefs[neg].log_odds
+                
+                # Create and add the belief node.
+                # This also adds it to self.belief_schema.
+                self.add_belief(BeliefNode(proposition=prop, log_odds=initial_log_odds))
+
         self.causal_links.append({
             "antecedent": antecedent,
             "consequent": consequent,
             "weight": float(weight)
         })
+
+    def get_parents(self, proposition: str) -> List[Dict[str, Any]]:
+        """Return all causal links where *proposition* is the consequent."""
+        return [l for l in self.causal_links if l["consequent"] == proposition]
+
+    def get_children(self, proposition: str) -> List[Dict[str, Any]]:
+        """Return all causal links where *proposition* is the antecedent."""
+        return [l for l in self.causal_links if l["antecedent"] == proposition]
     
     def refresh_belief_schema(self) -> None:
         """Sync the schema with currently tracked canonical beliefs."""

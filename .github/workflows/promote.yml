@@ -1,0 +1,27 @@
+name: Promote to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_branch:
+        description: "Source branch to promote"
+        required: false
+        default: "main"
+
+permissions:
+  contents: write
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_branch }}
+
+      - name: Promote to production branch
+        run: |
+          git fetch origin
+          git checkout -B production
+          git push origin production --force

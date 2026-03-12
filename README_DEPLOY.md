@@ -19,6 +19,12 @@ This document explains how to deploy the demo for free on multiple platforms.
 
 Your app will be live at `https://causal-character-graphs.streamlit.app` within 2-3 minutes.
 
+### CI/CD Notes (GitHub Actions → Streamlit Cloud)
+
+- The workflow in `.github/workflows/deploy.yml` runs tests on pushes and PRs to `main`.
+- Streamlit Cloud deploys automatically from `main` whenever the branch updates.
+- If you want to gate deployments, use a protected `production` branch and deploy Streamlit from there.
+
 ## Option 2: Hugging Face Spaces
 
 **Result:** `https://huggingface.co/spaces/your-username/causal-character-graphs`

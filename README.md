@@ -2,6 +2,22 @@
 
 A lightweight structured-state framework for persistent fictional agents in long-form dialogue systems.
 
+## Live Demo
+
+**Try it online → [https://pocketfm-dynamic-causal-graph-mvp.streamlit.app](https://pocketfm-dynamic-causal-graph-mvp.streamlit.app)**
+
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://pocketfm-dynamic-causal-graph-mvp.streamlit.app)
+
+The demo runs in your browser with no installation required.  All features are live:
+- **Belief revision** — log-odds updates as you chat
+- **Causal propagation** — A→B belief graph updates in real time
+- **Emotional state** — valence / arousal bars update after each turn
+- **Relationship tracking** — trust, affection, respect per entity
+- **LLM dialogue** — enter a Gemini API key for full LLM-powered responses;
+  falls back to rule-based generation when no key is present
+- **Scenario presets** — one-click narrative events
+- **Save / load / download** — persist and restore the full simulation state
+
 ## Overview
 
 Large language models lack an explicit representation of persistent psychological state, causing personality drift and motivational inconsistency in extended interactions. This project implements Dynamic Causal Character Graphs (DCCGs), a structured causal framework that models a character's core traits, beliefs, and world constraints as a directed acyclic graph.
@@ -15,6 +31,10 @@ The belief revision system uses a log-odds framework for numerically stable, add
 ## Repository Structure
 
 ```
+streamlit_app.py          - Web demo (Streamlit Community Cloud entry point)
+.streamlit/
+  config.toml             - Streamlit theme & server configuration
+
 src/
   core/
     data_structures.py      - Shared schemas: TraitState, EmotionState,
@@ -66,13 +86,32 @@ pip install -r requirements.txt
 
 Python 3.10 or later is required.
 
+## Running the Web Demo Locally
+
+```bash
+streamlit run streamlit_app.py
+```
+
+Then open `http://localhost:8501` in your browser.
+
+## Deploying on Streamlit Community Cloud (Free, Permanent)
+
+1. Fork or push this repository to your GitHub account.
+2. Go to **[share.streamlit.io](https://share.streamlit.io)** and sign in with GitHub.
+3. Click **"New app"** → select your repository and branch.
+4. Set the **Main file path** to `streamlit_app.py`.
+5. *(Optional)* Add `GEMINI_API_KEY` as a secret in **Advanced settings → Secrets**
+   to enable full LLM-powered responses.
+6. Click **Deploy** — your app will be live at a permanent `*.streamlit.app` URL
+   within minutes.
+
 ## Running Tests
 
 ```bash
 pytest
 ```
 
-## Running the Demo
+## Running the CLI Demo
 
 ```bash
 PYTHONPATH=src python demo/demo_conversations.py

@@ -697,6 +697,7 @@ class EventFrame:
         confidence: float = 1.0,
         turn_index: int = 0,
         source_text: str = "",
+        polarities: Optional[Dict[str, int]] = None,
     ):
         self.propositions: List[str] = list(propositions or [])
         self.entities: List[str] = list(entities or [])

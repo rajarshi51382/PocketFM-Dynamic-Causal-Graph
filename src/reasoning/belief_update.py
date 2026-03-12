@@ -17,7 +17,7 @@ where:
 """
 
 import math
-from typing import Dict
+from typing import Dict, Union
 
 from core.data_structures import (
     CharacterState,
@@ -30,10 +30,12 @@ from core.data_structures import (
 
 DIRECT_OBSERVATION = "DirectObservation"
 
-def directional_alignment(event: EventFrame, proposition: str) -> int:
+def directional_alignment(event: EventFrame, proposition: Union[str, "BeliefNode"]) -> int:
     """
     Determine whether event supports, contradicts, or is irrelevant
     to a given belief proposition.
+
+    Accepts either a proposition string or a BeliefNode.
 
     Uses two mechanisms (checked in order):
       1. Polarity dict (PI's approach): event.polarities[prop] = ±1
@@ -45,7 +47,13 @@ def directional_alignment(event: EventFrame, proposition: str) -> int:
     -1  if event contradicts the proposition
      0  if event is irrelevant
     """
-    p_norm = proposition.strip().lower()
+    # Accept BeliefNode or string
+    if isinstance(proposition, BeliefNode):
+        prop_str = proposition.proposition
+    else:
+        prop_str = str(proposition)
+
+    p_norm = prop_str.strip().lower()
     prop_list = [p.strip().lower() for p in event.propositions]
 
     # Check if proposition is mentioned at all
@@ -62,6 +70,16 @@ def directional_alignment(event: EventFrame, proposition: str) -> int:
         if p.startswith("not_") and p[4:] == p_norm:
             return -1
         if p.startswith("~") and p[1:] == p_norm:
+            return -1
+
+    # Handle negated belief: if belief is "not_X" and event asserts "X", that contradicts
+    if p_norm.startswith("not_"):
+        base = p_norm[4:]
+        if base in prop_list:
+            return -1
+    elif p_norm.startswith("~"):
+        base = p_norm[1:]
+        if base in prop_list:
             return -1
 
     return 0
@@ -180,7 +198,7 @@ def update_belief_log_odds(
     narrative_importance : float
         Shock-gated plasticity factor sigma(e_t), default 1.0.
     """
-    delta = directional_alignment(event, belief)
+    delta = directional_alignment(event, belief.proposition)
     if delta == 0:
         return
 

@@ -18,6 +18,7 @@ import math
 import os
 import sys
 import copy
+import subprocess
 
 import streamlit as st
 
@@ -68,6 +69,18 @@ def _emotion_color(valence: float) -> str:
     if valence < -0.3:
         return "red"
     return "orange"
+
+
+def _get_commit_label() -> str:
+    """Best-effort short commit label for UI display."""
+    env_sha = os.getenv("STREAMLIT_GIT_COMMIT") or os.getenv("GITHUB_SHA")
+    if env_sha:
+        return env_sha[:7]
+    try:
+        sha = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"], text=True).strip()
+        return sha or "unknown"
+    except Exception:
+        return "unknown"
 
 
 def _create_default_character() -> CharacterState:
@@ -229,6 +242,9 @@ with st.sidebar:
         file_name="dccg_state.json",
         mime="application/json",
     )
+
+    st.divider()
+    st.caption(f"App version: `{_get_commit_label()}`")
 
 # ---------------------------------------------------------------------------
 # Main layout — two-column: chat on the left, state panels on the right

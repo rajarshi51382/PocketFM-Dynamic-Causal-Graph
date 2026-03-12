@@ -13,11 +13,8 @@ def test_add_causal_link_ensures_nodes():
     # Add a causal link with a negated antecedent and a new consequent
     state.add_causal_link(antecedent="not_A", consequent="B", weight=0.8)
     
-    # Check if not_A was created with negated log-odds
-    assert "not_a" in state.beliefs
-    assert math.isclose(state.beliefs["not_a"].log_odds, -2.0)
-    
-    # Check if B was created with neutral log-odds
+    # Check if A remains and B was created with neutral log-odds
+    assert "a" in state.beliefs
     assert "b" in state.beliefs
     assert state.beliefs["b"].log_odds == 0.0
     

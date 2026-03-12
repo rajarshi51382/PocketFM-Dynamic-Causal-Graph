@@ -141,7 +141,7 @@ def compute_source_credibility(event: EventFrame, state: CharacterState) -> floa
     float
         Credibility value in [0, 1].
     """
-    if event.speaker is None or event.speaker == DIRECT_OBSERVATION:
+    if event.speaker is None or event.speaker == DIRECT_OBSERVATION or event.speaker in {"user", "unknown"}:
         return 1.0
 
     rel = state.relationships.get(event.speaker)

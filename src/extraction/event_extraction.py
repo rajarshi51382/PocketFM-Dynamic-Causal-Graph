@@ -180,37 +180,149 @@ def _extract_event_llm(user_message: str) -> EventFrame:
     )
 
 
-def _extract_event_rules(user_message: str) -> EventFrame:
-    """Original rule-based fallback logic."""
-    # 1. Basic cleaning and splitting
-    message = user_message.strip()
-    clauses = re.split(r'[.!?;,]', message)
-    clauses = [c.strip() for c in clauses if c.strip()]
-
+def _extract_simple_propositions(message: str) -> list[str]:
+    """
+    Simple fallback extraction when semantic patterns don't match.
+    Extracts basic subject_predicate patterns from the message.
+    """
     propositions = []
-    for clause in clauses:
-        # 2. Normalize and handle negation
-        words = clause.lower().split()
-        is_negated = any(neg in words for neg in ["not", "never", "no", "neither", "nor"]) or "~" in clause
-        
-        # Remove negation words for the base proposition
-        clean_words = [w for w in words if w not in ["not", "never", "no", "a", "an", "the", "is", "are", "was", "were", "has", "have"]]
-        prop = "_".join(clean_words).replace("~", "")
-        
-        if prop:
-            if is_negated:
-                propositions.append(f"not_{prop}")
-            else:
-                propositions.append(prop)
-
-    # 3. Entity extraction - improved to catch Proper Nouns and snake_case_entities
-    entities = list(set(re.findall(r'\b(?:[A-Z][a-z]+(?:_[A-Z][a-z]+)*|[A-Z]{2,})\b', message)))
+    clauses = re.split(r'[.!?;,]', message)
     
-    # 4. Tone detection
+    for clause in clauses:
+        clause = clause.strip().lower()
+        if not clause:
+            continue
+            
+        words = clause.split()
+        is_negated = any(neg in words for neg in ["not", "never", "no", "neither", "nor"])
+        
+        # Remove common stopwords
+        stopwords = {"not", "never", "no", "a", "an", "the", "is", "are", "was", "were", 
+                     "has", "have", "had", "be", "been", "being", "i", "you", "he", "she",
+                     "it", "we", "they", "that", "this", "and", "or", "but", "if", "then",
+                     "so", "very", "just", "really", "actually", "heard", "think", "believe"}
+        clean_words = [w for w in words if w not in stopwords and len(w) > 1]
+        
+        if len(clean_words) >= 2:
+            # Try to form a simple proposition from first noun + adjective/verb
+            prop = "_".join(clean_words[:3])  # Limit to 3 words max
+            if prop:
+                if is_negated:
+                    propositions.append(f"not_{prop}")
+                else:
+                    propositions.append(prop)
+    
+    return propositions
+
+
+def _extract_event_rules(user_message: str) -> EventFrame:
+    """
+    Rule-based fallback logic with keyword pattern matching.
+    
+    Uses semantic keyword patterns to extract meaningful propositions
+    that map to the belief schema, rather than simple word concatenation.
+    """
+    message = user_message.strip().lower()
+    
+    # Semantic keyword patterns -> proposition mappings
+    # Each pattern is (keywords_any, keywords_all, negation_keywords, proposition)
+    # keywords_any: if ANY of these appear, consider the pattern
+    # keywords_all: ALL of these must appear (can be empty)
+    # negation_keywords: if ANY of these appear, negate the proposition
+    # proposition: the base proposition to emit
+    
+    SEMANTIC_PATTERNS = [
+        # Castle safety patterns
+        (["castle", "fortress", "walls", "stronghold"], [], 
+         ["unsafe", "dangerous", "crumbling", "falling", "broken", "weak", "not safe", "no longer safe", "isn't safe", "not secure"],
+         "castle_is_safe", True),  # True = negation_keywords indicate NEGATIVE proposition
+        (["castle", "fortress", "walls", "stronghold"], [],
+         ["safe", "secure", "strong", "protected", "solid", "sturdy"],
+         "castle_is_safe", False),  # False = these keywords indicate POSITIVE proposition
+        
+        # King wisdom patterns
+        (["king", "ruler", "monarch", "majesty"], [],
+         ["wise", "smart", "intelligent", "good", "just", "fair", "trustworthy", "honest"],
+         "king_is_wise", False),
+        (["king", "ruler", "monarch", "majesty"], [],
+         ["foolish", "stupid", "evil", "bad", "liar", "betrayed", "betrayal", "corrupt", "dishonest", "unwise"],
+         "king_is_wise", True),
+        
+        # Forest danger patterns
+        (["forest", "woods", "woodland"], [],
+         ["dangerous", "unsafe", "scary", "dark", "haunted", "monsters", "beasts", "threat"],
+         "forest_is_dangerous", False),
+        (["forest", "woods", "woodland"], [],
+         ["safe", "clear", "cleared", "peaceful", "calm", "secure"],
+         "forest_is_dangerous", True),
+        
+        # Trust patterns
+        (["ally", "friend", "companion"], [],
+         ["trustworthy", "trust", "reliable", "loyal", "honest", "faithful"],
+         "ally_is_trustworthy", False),
+        (["ally", "friend", "companion"], [],
+         ["untrustworthy", "betray", "betrayed", "traitor", "dishonest", "liar"],
+         "ally_is_trustworthy", True),
+        
+        # Enemy patterns  
+        (["enemy", "enemies", "foe", "army", "invader"], [],
+         ["approaching", "coming", "attack", "threat", "danger", "near"],
+         "enemy_is_approaching", False),
+        
+        # Peace/war patterns
+        (["peace", "war"], [],
+         ["declared", "over", "ended", "armistice", "treaty"],
+         "peace_declared", False),
+    ]
+    
+    propositions = []
+    
+    # Check for explicit negation in the message
+    has_negation = any(neg in message for neg in ["not ", "never ", "no ", "isn't", "aren't", "wasn't", "weren't", "don't", "doesn't", "didn't", "n't"])
+    
+    for keywords_any, keywords_all, indicator_keywords, base_prop, indicators_mean_negative in SEMANTIC_PATTERNS:
+        # Check if any primary keyword is present
+        if not any(kw in message for kw in keywords_any):
+            continue
+            
+        # Check if all required keywords are present
+        if keywords_all and not all(kw in message for kw in keywords_all):
+            continue
+            
+        # Check if indicator keywords are present
+        indicator_found = any(kw in message for kw in indicator_keywords)
+        
+        if indicator_found:
+            # Determine if this should be positive or negative
+            if indicators_mean_negative:
+                # The indicator keywords suggest the negative form
+                # But check for double negation (e.g., "not unsafe" = safe)
+                if has_negation and any(neg_kw in message for neg_kw in ["not unsafe", "not dangerous", "isn't dangerous", "not foolish", "not evil"]):
+                    propositions.append(base_prop)
+                else:
+                    propositions.append(f"not_{base_prop}")
+            else:
+                # The indicator keywords suggest the positive form
+                if has_negation:
+                    propositions.append(f"not_{base_prop}")
+                else:
+                    propositions.append(base_prop)
+    
+    # Deduplicate while preserving order
+    seen = set()
+    propositions = [p for p in propositions if not (p in seen or seen.add(p))]
+    
+    # If no semantic patterns matched, fall back to simple extraction
+    if not propositions:
+        propositions = _extract_simple_propositions(message)
+
+    # 3. Entity extraction - use original message for proper case detection
+    entities = list(set(re.findall(r'\b(?:[A-Z][a-z]+(?:_[A-Z][a-z]+)*|[A-Z]{2,})\b', user_message)))
+    
+    # 4. Tone detection (message is already lowercase)
     detected_tone = "neutral"
-    message_lower = message.lower()
     for tone, keywords in _TONE_MAP.items():
-        if any(word in message_lower for word in keywords):
+        if any(word in message for word in keywords):
             detected_tone = tone
             break
 

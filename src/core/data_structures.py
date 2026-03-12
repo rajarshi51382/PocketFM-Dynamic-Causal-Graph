@@ -407,17 +407,23 @@ class CharacterState:
         # Ensure antecedent and consequent exist as nodes if they are valid.
         # This prevents propagation from skipping them due to missing nodes.
         for prop in [antecedent, consequent]:
-            if prop not in self.beliefs:
+            prop_norm = prop.strip().lower()
+            if prop_norm.startswith("not_"):
+                prop_norm = prop_norm[4:]
+            elif prop_norm.startswith("~"):
+                prop_norm = prop_norm[1:]
+
+            if prop_norm not in self.beliefs:
                 # If we don't have the node, initialize it.
                 # If its negation exists, use its negative log-odds to maintain consistency.
-                neg = _negation_of(prop)
+                neg = _negation_of(prop_norm)
                 initial_log_odds = 0.0
                 if neg in self.beliefs:
                     initial_log_odds = -self.beliefs[neg].log_odds
-                
+
                 # Create and add the belief node.
                 # This also adds it to self.belief_schema.
-                self.add_belief(BeliefNode(proposition=prop, log_odds=initial_log_odds))
+                self.add_belief(BeliefNode(proposition=prop_norm, log_odds=initial_log_odds))
 
         self.causal_links.append({
             "antecedent": antecedent,

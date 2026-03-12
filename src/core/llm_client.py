@@ -45,7 +45,7 @@ def configure_client() -> bool:
     if api_key:
         try:
             import google.generativeai as genai
-            genai.configure(api_key=api_key)
+            genai.configure(api_key=api_key)  # type: ignore[attr-defined, reportPrivateImportUsage]
             _active_backend = "gemini"
             return True
         except Exception as e:
@@ -73,11 +73,11 @@ def generate_text(
     if api_key:
         try:
             import google.generativeai as genai
-            genai.configure(api_key=api_key)
-            model = genai.GenerativeModel(model_name)
+            genai.configure(api_key=api_key)  # type: ignore[attr-defined, reportPrivateImportUsage]
+            model = genai.GenerativeModel(model_name)  # type: ignore[attr-defined, reportPrivateImportUsage]
             response = model.generate_content(
                 prompt,
-                generation_config=genai.GenerationConfig(
+                generation_config=genai.GenerationConfig(  # type: ignore[attr-defined, reportPrivateImportUsage]
                     temperature=temperature,
                     max_output_tokens=max_tokens
                 )
@@ -113,11 +113,11 @@ def generate_structured(
 
     try:
         import google.generativeai as genai
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel(model_name)
+        genai.configure(api_key=api_key)  # type: ignore[attr-defined, reportPrivateImportUsage]
+        model = genai.GenerativeModel(model_name)  # type: ignore[attr-defined, reportPrivateImportUsage]
         response = model.generate_content(
             full_prompt,
-            generation_config=genai.GenerationConfig(
+            generation_config=genai.GenerationConfig(  # type: ignore[attr-defined, reportPrivateImportUsage]
                 temperature=temperature,
                 response_mime_type="application/json"
             )

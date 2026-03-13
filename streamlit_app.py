@@ -155,6 +155,10 @@ with st.sidebar:
         index=seed_index,
         format_func=lambda key: seed_labels.get(key, key),
     )
+    selected_meta = TIMELINE_SEEDS.get(selected_seed, {})
+    seed_label = selected_meta.get("label", selected_seed)
+    seed_time = selected_meta.get("timeline_index", "unknown")
+    st.caption(f"Selected context: {seed_label} (t={seed_time})")
     char_id = st.text_input(
         "Character name",
         value=st.session_state.character.character_id,
@@ -251,6 +255,10 @@ st.markdown(
     "**All features work instantly - no API keys required.**"
 )
 st.caption(f"Deployed version: `{_get_commit_label()}`")
+st.caption(
+    f"Timeline context: {TIMELINE_SEEDS.get(st.session_state.timeline_seed, {}).get('label', 'unknown')}"
+    f" (t={TIMELINE_SEEDS.get(st.session_state.timeline_seed, {}).get('timeline_index', 'unknown')})"
+)
 
 left_col, right_col = st.columns([3, 2], gap="large")
 

@@ -2,6 +2,8 @@
 
 This MVP is a sandboxed fantasy scenario used to validate dynamic causal character graphs. It is not tied to a specific canon or show timeline yet.
 
+Timeline seed data is stored in `data/timeline_seeds.json` and can be extended to add more timestamped states.
+
 ## Default Character
 
 - Name: `Sir_Galahad`

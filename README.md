@@ -72,6 +72,9 @@ docs/
   scenarios.md              - Scenario test checklist
   deploy.md                 - Deployment guide
   huggingface.md            - Hugging Face deployment notes
+
+data/
+  timeline_seeds.json       - Timestamp-based seed states for testing
 ```
 
 ## Belief Update Logic

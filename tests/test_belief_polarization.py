@@ -308,7 +308,7 @@ class TestIntegrationWithPresets:
         state = create_test_character()
         initial = get_belief_log_odds(state, "king_is_wise")
         
-        message = "The king has betrayed the entire kingdom — he's a liar!"
+        message = "The king has betrayed the entire kingdom - he's a liar!"
         event = extract_event(message)
         event = validate_event(event, message, state.belief_schema)
         

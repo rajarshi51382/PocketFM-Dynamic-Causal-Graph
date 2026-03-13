@@ -1,5 +1,5 @@
 """
-Dynamic Causal Character Graph — Streamlit Web Demo
+Dynamic Causal Character Graph - Streamlit Web Demo
 
 Features:
 - LLM-driven event extraction and dialogue generation (Gemini API)
@@ -23,7 +23,7 @@ import subprocess
 import streamlit as st
 
 # ---------------------------------------------------------------------------
-# Path setup — works whether the app is run from the repo root or via
+# Path setup - works whether the app is run from the repo root or via
 # `streamlit run streamlit_app.py`
 # ---------------------------------------------------------------------------
 _HERE = os.path.dirname(os.path.abspath(__file__))
@@ -50,7 +50,7 @@ from state.persistence import save_simulation_state, load_simulation_state
 # ---------------------------------------------------------------------------
 st.set_page_config(
     page_title="Dynamic Causal Character Graphs",
-    page_icon="🧠",
+    page_icon="D",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -132,15 +132,15 @@ def _init_session():
 _init_session()
 
 # ---------------------------------------------------------------------------
-# Sidebar — configuration & controls
+# Sidebar - configuration and controls
 # ---------------------------------------------------------------------------
 
 with st.sidebar:
-    st.title("⚙️ Configuration")
+    st.title("Configuration")
 
-    # ── API Key ──────────────────────────────────────────────────────────────
-    st.subheader("🔑 LLM Configuration")
-    st.markdown("**All features work without an API key!**")
+    # API Key
+    st.subheader("LLM Configuration")
+    st.markdown("**All features work without an API key.**")
     
     with st.expander("Optional: Add Gemini API Key for enhanced responses"):
         api_key_input = st.text_input(
@@ -154,20 +154,20 @@ with st.sidebar:
             st.session_state.gemini_api_key = api_key_input
 
     if st.session_state.gemini_api_key:
-        st.success("✅ LLM mode (Gemini API)")
+        st.success("LLM mode (Gemini API)")
     else:
-        st.success("✅ Smart rule-based mode (no API needed)")
+        st.success("Smart rule-based mode (no API needed)")
 
     st.divider()
 
-    # ── Character setup ───────────────────────────────────────────────────
-    st.subheader("🧑‍🦱 Character Setup")
+    # Character setup
+    st.subheader("Character Setup")
     char_id = st.text_input(
         "Character name",
         value=st.session_state.character.character_id,
     )
 
-    st.markdown("**Personality Traits** (–1 to +1)")
+    st.markdown("**Personality Traits** (-1 to +1)")
     col_t1, col_t2 = st.columns(2)
     bravery = col_t1.slider("Bravery", -1.0, 1.0,
                              float(st.session_state.character.traits.get("bravery", 0.8)), 0.05)
@@ -178,7 +178,7 @@ with st.sidebar:
     trusting = col_t2.slider("Trusting", -1.0, 1.0,
                               float(st.session_state.character.traits.get("trusting", 0.2)), 0.05)
 
-    if st.button("🔄 Reset / Apply Character"):
+    if st.button("Reset / Apply Character"):
         new_traits = TraitState(
             traits={
                 "bravery": bravery,
@@ -198,22 +198,22 @@ with st.sidebar:
 
     st.divider()
 
-    # ── Simulation parameters ─────────────────────────────────────────────
-    st.subheader("🔧 Simulation Parameters")
+    # Simulation parameters
+    st.subheader("Simulation Parameters")
     lambda_base = st.slider("λ base (learning rate)", 0.0, 2.0, 0.5, 0.05)
     narrative_importance = st.slider("σ narrative importance", 0.5, 5.0, 1.0, 0.25)
 
     st.divider()
 
-    # ── Save / Load ───────────────────────────────────────────────────────
-    st.subheader("💾 Save / Load State")
+    # Save / Load
+    st.subheader("Save / Load State")
     save_path = st.text_input("Save file", "savegame.json")
     if st.button("Save"):
         ok = save_simulation_state(
             st.session_state.character, st.session_state.world, save_path
         )
         if ok:
-            st.success(f"Saved → {save_path}")
+            st.success(f"Saved -> {save_path}")
         else:
             st.error("Save failed.")
 
@@ -223,7 +223,7 @@ with st.sidebar:
             c, w = load_simulation_state(load_path)
             st.session_state.character = c
             st.session_state.world = w
-            st.success(f"Loaded ← {load_path}")
+            st.success(f"Loaded <- {load_path}")
             st.rerun()
         except Exception as ex:
             st.error(f"Load failed: {ex}")
@@ -237,7 +237,7 @@ with st.sidebar:
         indent=2,
     )
     st.download_button(
-        "⬇️ Download state as JSON",
+        "Download state as JSON",
         data=state_json,
         file_name="dccg_state.json",
         mime="application/json",
@@ -247,24 +247,24 @@ with st.sidebar:
     st.caption(f"App version: `{_get_commit_label()}`")
 
 # ---------------------------------------------------------------------------
-# Main layout — two-column: chat on the left, state panels on the right
+# Main layout - two-column: chat on the left, state panels on the right
 # ---------------------------------------------------------------------------
 
-st.title("🧠 Dynamic Causal Character Graphs")
+st.title("Dynamic Causal Character Graphs")
 st.markdown(
-    "An interactive demo of the **Dynamic Causal Character Graph (DCCG)** system — "
+    "An interactive demo of the **Dynamic Causal Character Graph (DCCG)** system - "
     "belief revision, causal propagation, and conditioned dialogue generation. "
-    "**All features work instantly — no API keys required!**"
+    "**All features work instantly - no API keys required.**"
 )
 st.caption(f"Deployed version: `{_get_commit_label()}`")
 
 left_col, right_col = st.columns([3, 2], gap="large")
 
 # ─────────────────────────────────────────────────────────────────────────────
-# LEFT — chat interface
+# LEFT - chat interface
 # ─────────────────────────────────────────────────────────────────────────────
 with left_col:
-    st.subheader(f"💬 Conversation with *{st.session_state.character.character_id}*")
+    st.subheader(f"Conversation with *{st.session_state.character.character_id}*")
 
     # Render conversation history
     chat_container = st.container(height=420, border=True)
@@ -276,7 +276,7 @@ with left_col:
         for user_msg, char_resp in st.session_state.history:
             with st.chat_message("user"):
                 st.write(user_msg)
-            with st.chat_message("assistant", avatar="🧑‍🦱"):
+            with st.chat_message("assistant"):
                 st.write(char_resp)
 
     # Message input
@@ -310,16 +310,16 @@ with left_col:
         st.rerun()
 
     # Scenario presets
-    st.subheader("🎭 Scenario Presets")
+    st.subheader("Scenario Presets")
     st.markdown("Click a preset to send it as a message:")
     preset_cols = st.columns(2)
     presets = [
-        ("🏰 Castle is unsafe", "I heard the castle walls are crumbling and it's no longer safe!"),
-        ("👑 King betrayed us", "The king has betrayed the entire kingdom — he's a liar!"),
-        ("🌲 Forest now safe", "Actually, the forest has been cleared; it's perfectly safe now."),
-        ("🤝 Ally is trustworthy", "I want you to know that your ally has proven completely trustworthy."),
-        ("⚔️ Enemy approaching", "An enemy army is approaching — we must act fast!"),
-        ("🕊️ Peace declared", "The war is over; peace has been declared throughout the land."),
+        ("Castle is unsafe", "I heard the castle walls are crumbling and it's no longer safe!"),
+        ("King betrayed us", "The king has betrayed the entire kingdom - he's a liar!"),
+        ("Forest now safe", "Actually, the forest has been cleared; it's perfectly safe now."),
+        ("Ally is trustworthy", "I want you to know that your ally has proven completely trustworthy."),
+        ("Enemy approaching", "An enemy army is approaching - we must act fast!"),
+        ("Peace declared", "The war is over; peace has been declared throughout the land."),
     ]
     for i, (label, text) in enumerate(presets):
         col = preset_cols[i % 2]
@@ -337,13 +337,13 @@ with left_col:
             st.rerun()
 
 # ─────────────────────────────────────────────────────────────────────────────
-# RIGHT — internal state visualisation
+# RIGHT - internal state visualization
 # ─────────────────────────────────────────────────────────────────────────────
 with right_col:
     char = st.session_state.character
 
-    # ── Emotional State ─────────────────────────────────────────────────────
-    st.subheader("😊 Emotional State")
+    # Emotional State
+    st.subheader("Emotional State")
     v = char.emotions.valence
     a = char.emotions.arousal
     dom = char.emotions.dominant_emotion() or "neutral"
@@ -355,11 +355,11 @@ with right_col:
     # Valence bar
     st.progress(
         max(0.0, min(1.0, (v + 1.0) / 2.0)),
-        text=f"Valence  {v:+.2f}  (–1 = very negative … +1 = very positive)",
+        text=f"Valence  {v:+.2f}  (-1 = very negative ... +1 = very positive)",
     )
     st.progress(
         max(0.0, min(1.0, a)),
-        text=f"Arousal  {a:.2f}  (0 = calm … 1 = excited)",
+        text=f"Arousal  {a:.2f}  (0 = calm ... 1 = excited)",
     )
     if char.emotions.emotion_tags:
         with st.expander("Emotion tags"):
@@ -370,8 +370,8 @@ with right_col:
 
     st.divider()
 
-    # ── Beliefs ─────────────────────────────────────────────────────────────
-    st.subheader("💡 Beliefs")
+    # Beliefs
+    st.subheader("Beliefs")
     if char.beliefs:
         sorted_beliefs = sorted(
             char.beliefs.items(), key=lambda x: -abs(x[1].log_odds)
@@ -386,7 +386,7 @@ with right_col:
     st.divider()
 
     # ── Traits ─────────────────────────────────────────────────────────────
-    st.subheader("🎭 Personality Traits")
+    st.subheader("Personality Traits")
     for trait, val in char.traits.traits.items():
         # Map [-1,1] → [0,1] for the progress bar
         st.progress(
@@ -397,7 +397,7 @@ with right_col:
     st.divider()
 
     # ── Causal Links ────────────────────────────────────────────────────────
-    st.subheader("🔗 Causal Graph Links")
+    st.subheader("Causal Graph Links")
     if char.causal_links:
         for link in char.causal_links:
             ant = link.get("antecedent", "?")
@@ -413,8 +413,8 @@ with right_col:
 
     st.divider()
 
-    # ── Relationships ───────────────────────────────────────────────────────
-    st.subheader("🤝 Relationships")
+    # Relationships
+    st.subheader("Relationships")
     if char.relationships:
         for entity, rel in char.relationships.items():
             with st.expander(f"{entity}"):
@@ -424,10 +424,10 @@ with right_col:
     else:
         st.info("No relationships tracked yet.")
 
-    # ── Intentions ─────────────────────────────────────────────────────────
+    # Intentions
     if char.intentions:
         st.divider()
-        st.subheader("🎯 Active Intentions")
+        st.subheader("Active Intentions")
         for intention in char.intentions:
             st.markdown(f"- {intention}")
 
@@ -439,7 +439,7 @@ st.markdown(
     """
     <div style='text-align:center; color: grey; font-size: 0.85em;'>
     Dynamic Causal Character Graphs · 
-    <a href='https://github.com/rajarshi51382/PocketFM-Dynamic-Causal-Graph-MVP' target='_blank'>GitHub</a> ·
+    <a href='https://github.com/itsloganmann/PocketFM-Dynamic-Causal-Graph-MVP' target='_blank'>GitHub</a> ·
     Powered by <a href='https://streamlit.io' target='_blank'>Streamlit Community Cloud</a>
     </div>
     """,

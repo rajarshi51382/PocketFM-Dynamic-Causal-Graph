@@ -77,5 +77,5 @@ jobs:
     steps:
       - name: Deployment notification
         run: |
-          echo "✅ All tests passed! Streamlit Cloud will auto-deploy from main branch."
-          echo "🔗 App URL: https://causal-character-graphs.streamlit.app/"
+          echo "All tests passed. Streamlit Cloud will auto-deploy from production branch."
+          echo "App URL: https://causal-character-graphs.streamlit.app/"

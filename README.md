@@ -5,25 +5,25 @@
 
 A lightweight structured-state framework for persistent fictional agents in long-form dialogue systems.
 
-## 🚀 Live Demo
+## Live Demo
 
-**Try it online → [https://causal-character-graphs.streamlit.app](https://causal-character-graphs.streamlit.app)**
+**Try it online: [https://causal-character-graphs.streamlit.app](https://causal-character-graphs.streamlit.app)**
 
-## 🧪 Test Scenarios & Grounded Context
+## Test Scenarios and Grounded Context
 
-- Scenario checklist: `README_SCENARIOS.md`
-- Grounded context & assumptions: `README_CONTEXT.md`
+- Scenario checklist: `docs/scenarios.md`
+- Grounded context and assumptions: `docs/context.md`
 
-### ✨ All Features Work Free — No API Keys Required!
+### All Features Work Free - No API Keys Required
 
 The demo runs in your browser with no installation or API keys needed. All features are live:
-- **Belief revision** — log-odds updates as you chat
-- **Causal propagation** — A→B belief graph updates in real time
-- **Emotional state** — valence / arousal bars update after each turn
-- **Relationship tracking** — trust, affection, respect per entity
-- **Smart dialogue generation** — contextually-aware character responses
-- **Scenario presets** — one-click narrative events
-- **Save / load / download** — persist and restore the full simulation state
+- **Belief revision** - log-odds updates as you chat
+- **Causal propagation** - A to B belief graph updates in real time
+- **Emotional state** - valence and arousal bars update after each turn
+- **Relationship tracking** - trust, affection, respect per entity
+- **Smart dialogue generation** - contextually-aware character responses
+- **Scenario presets** - one-click narrative events
+- **Save, load, download** - persist and restore the full simulation state
 
 > **Optional**: Add a Gemini API key for enhanced LLM-powered responses
 
@@ -67,6 +67,12 @@ tests/
 
 demo/
   demo_conversations.py     - Offline demo showing belief state evolution
+
+docs/
+  context.md                - Grounded context and assumptions
+  scenarios.md              - Scenario test checklist
+  deploy.md                 - Deployment guide
+  huggingface.md            - Hugging Face deployment notes
 ```
 
 ## Belief Update Logic
@@ -110,7 +116,7 @@ Then open `http://localhost:8501` in your browser.
 3. Click **"New app"** → select your repository and branch.
 4. Set the **Main file path** to `streamlit_app.py`.
 5. **Set a custom subdomain** (e.g., `causal-character-graphs`) in Advanced settings for a clean URL.
-6. Click **Deploy** — your app will be live at a permanent `*.streamlit.app` URL within minutes.
+6. Click **Deploy** - your app will be live at a permanent `*.streamlit.app` URL within minutes.
 
 > **Note**: No API keys or secrets are required. All features work out of the box!
 

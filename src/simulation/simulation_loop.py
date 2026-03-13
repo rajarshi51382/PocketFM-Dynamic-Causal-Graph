@@ -16,9 +16,9 @@ from typing import List, Tuple
 from core.data_structures import CharacterState, WorldState, EventFrame
 from extraction.event_extraction import extract_event, validate_event
 from generation.dialogue_generation import produce_dialogue
-from reasoning.belief_update import apply_belief_updates, DIRECT_OBSERVATION
+from reasoning.belief_update import apply_belief_updates, DIRECT_OBSERVATION, directional_alignment, resolve_belief_conflicts
 from reasoning.state_update import propagate_state_updates
-from reasoning.causal_propagation import propagate_causal_effects
+from reasoning.causal_propagation import propagate_causal_effects, _update_belief_log_odds
 from reasoning.verifier import verify_dialogue
 
 def simulation_turn(
@@ -27,6 +27,7 @@ def simulation_turn(
     world_state: WorldState,
     lambda_base: float = 0.5,
     narrative_importance: float = 1.0,
+    propagation_rate: float = 0.3,
 ) -> str:
     """
     Execute one conversation turn.
@@ -77,8 +78,27 @@ def simulation_turn(
                 narrative_importance=narrative_importance,
             )
             
+            # Event-driven causal effects
+            updates = {}
+            event_props = {p.strip().lower() for p in event.propositions}
+            for link in character_state.causal_links:
+                antecedent = link.get("antecedent", "").strip().lower()
+                if antecedent not in event_props:
+                    continue
+                alignment = directional_alignment(event, antecedent)
+                if alignment == 0:
+                    continue
+                weight = link.get("weight", 1.0)
+                delta = propagation_rate * weight * alignment * event.confidence
+                updates[link["consequent"]] = updates.get(link["consequent"], 0.0) + delta
+
+            for prop, delta in updates.items():
+                _update_belief_log_odds(character_state, prop, delta)
+            if updates:
+                resolve_belief_conflicts(character_state.beliefs)
+
             # Causal inference (internal reasoning)
-            propagate_causal_effects(character_state)
+            propagate_causal_effects(character_state, propagation_rate=propagation_rate)
             
             # Emotional/Social state update
             propagate_state_updates(character_state, event)

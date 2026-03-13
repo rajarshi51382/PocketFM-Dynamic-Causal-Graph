@@ -200,6 +200,7 @@ with st.sidebar:
     st.subheader("Simulation Parameters")
     lambda_base = st.slider("λ base (learning rate)", 0.0, 2.0, 0.5, 0.05)
     narrative_importance = st.slider("σ narrative importance", 0.5, 5.0, 1.0, 0.25)
+    propagation_rate = st.slider("Causal propagation rate", 0.0, 1.0, 0.3, 0.05)
 
     st.divider()
 
@@ -300,13 +301,14 @@ with left_col:
         _apply_api_key()
 
         with st.spinner("Thinking…"):
-            response = simulation_turn(
-                user_input.strip(),
-                st.session_state.character,
-                st.session_state.world,
-                lambda_base=lambda_base,
-                narrative_importance=narrative_importance,
-            )
+                response = simulation_turn(
+                    user_input.strip(),
+                    st.session_state.character,
+                    st.session_state.world,
+                    lambda_base=lambda_base,
+                    narrative_importance=narrative_importance,
+                    propagation_rate=propagation_rate,
+                )
 
         st.session_state.history.append((user_input.strip(), response))
         st.rerun()
@@ -334,6 +336,7 @@ with left_col:
                     st.session_state.world,
                     lambda_base=lambda_base,
                     narrative_importance=narrative_importance,
+                    propagation_rate=propagation_rate,
                 )
             st.session_state.history.append((text, response))
             st.rerun()

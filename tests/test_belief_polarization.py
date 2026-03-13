@@ -152,6 +152,24 @@ class TestBeliefPolarization:
         final_log_odds = get_belief_log_odds(state, "castle_is_safe")
         assert final_log_odds < initial_log_odds, \
             f"Expected decrease: {initial_log_odds} -> {final_log_odds}"
+
+    def test_confidence_scales_update_magnitude(self):
+        """Lower confidence should produce a smaller magnitude update."""
+        state = create_test_character()
+        initial = get_belief_log_odds(state, "castle_is_safe")
+
+        low_conf_event = EventFrame(propositions=["not_castle_is_safe"], confidence=0.2)
+        apply_belief_updates(state, low_conf_event, lambda_base=0.5)
+        after_low = get_belief_log_odds(state, "castle_is_safe")
+
+        # Reset and apply a high-confidence update
+        set_belief_log_odds(state, "castle_is_safe", initial)
+        high_conf_event = EventFrame(propositions=["not_castle_is_safe"], confidence=1.0)
+        apply_belief_updates(state, high_conf_event, lambda_base=0.5)
+        after_high = get_belief_log_odds(state, "castle_is_safe")
+
+        assert (initial - after_high) > (initial - after_low), \
+            "High-confidence update should have larger magnitude than low-confidence"
     
     def test_repeated_unsafe_messages_polarize_belief(self):
         """Repeated 'castle is unsafe' messages should keep decreasing belief."""

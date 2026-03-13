@@ -1,6 +1,6 @@
 # Dynamic Causal Character Graphs
 
-[![CI](https://github.com/rajarshi51382/PocketFM-Dynamic-Causal-Graph-MVP/actions/workflows/deploy.yml/badge.svg)](https://github.com/rajarshi51382/PocketFM-Dynamic-Causal-Graph-MVP/actions/workflows/deploy.yml)
+[![CI](https://github.com/itsloganmann/PocketFM-Dynamic-Causal-Graph-MVP/actions/workflows/deploy.yml/badge.svg)](https://github.com/itsloganmann/PocketFM-Dynamic-Causal-Graph-MVP/actions/workflows/deploy.yml)
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://causal-character-graphs.streamlit.app)
 
 A lightweight structured-state framework for persistent fictional agents in long-form dialogue systems.
@@ -8,6 +8,11 @@ A lightweight structured-state framework for persistent fictional agents in long
 ## 🚀 Live Demo
 
 **Try it online → [https://causal-character-graphs.streamlit.app](https://causal-character-graphs.streamlit.app)**
+
+## 🧪 Test Scenarios & Grounded Context
+
+- Scenario checklist: `README_SCENARIOS.md`
+- Grounded context & assumptions: `README_CONTEXT.md`
 
 ### ✨ All Features Work Free — No API Keys Required!
 

@@ -9,9 +9,9 @@ This document explains how to deploy the demo for free on multiple platforms.
 1. Go to [share.streamlit.io](https://share.streamlit.io)
 2. Sign in with GitHub
 3. Click "New app"
-4. Select this repository (`rajarshi51382/PocketFM-Dynamic-Causal-Graph-MVP`)
+4. Select this repository (`itsloganmann/PocketFM-Dynamic-Causal-Graph-MVP`)
 5. Set:
-   - Branch: `main`
+   - Branch: `production`
    - Main file path: `streamlit_app.py`
 6. In "Advanced settings":
    - Set custom subdomain: `causal-character-graphs` (or your preferred name)
@@ -21,9 +21,10 @@ Your app will be live at `https://causal-character-graphs.streamlit.app` within 
 
 ### CI/CD Notes (GitHub Actions → Streamlit Cloud)
 
-- The workflow in `.github/workflows/deploy.yml` runs tests on pushes and PRs to `main`.
-- Streamlit Cloud deploys automatically from `main` whenever the branch updates.
-- If you want to gate deployments, use a protected `production` branch and deploy Streamlit from there.
+- Tests run on pushes and PRs to `main`, and on `production`.
+- Streamlit Cloud deploys from the `production` branch only.
+- Promote changes via the GitHub Actions workflow in `.github/workflows/promote.yml`.
+- Protect `production` so only passing CI can be promoted.
 
 ## Option 2: Hugging Face Spaces
 

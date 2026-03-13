@@ -41,10 +41,16 @@ def make_event(propositions=None, speaker=None, confidence=1.0, emotional_tone=N
     return EventFrame(
         propositions=propositions or [],
         entities=[],
-        speaker=speaker,
-        emotional_tone=emotional_tone,
+        speaker="unknown" if speaker is None else speaker,
+        emotional_tone="neutral" if emotional_tone is None else emotional_tone,
         confidence=confidence,
     )
+
+
+def get_belief_log_odds(state: CharacterState, belief_name: str) -> float:
+    belief = state.get_belief(belief_name)
+    assert belief is not None, f"Belief {belief_name} should exist"
+    return belief.log_odds
 
 
 # ---------------------------------------------------------------------------
@@ -113,6 +119,16 @@ class TestComputeSourceCredibility:
         state = make_state()
         event = make_event(speaker="stranger")
         assert compute_source_credibility(event, state) == pytest.approx(0.5)
+
+    def test_user_speaker_returns_one(self):
+        state = make_state()
+        event = make_event(speaker="user")
+        assert compute_source_credibility(event, state) == pytest.approx(1.0)
+
+    def test_unknown_literal_speaker_returns_one(self):
+        state = make_state()
+        event = make_event(speaker="unknown")
+        assert compute_source_credibility(event, state) == pytest.approx(1.0)
 
     def test_zero_trust_speaker(self):
         rel = RelationshipState(trust=0.0)
@@ -312,11 +328,11 @@ class TestApplyBeliefUpdates:
         )
         
         assert "not_king_is_wise" in event.propositions
-        
-        before = state.get_belief("king_is_wise").log_odds
+
+        before = get_belief_log_odds(state, "king_is_wise")
         apply_belief_updates(state, event, lambda_base=0.5)
-        after = state.get_belief("king_is_wise").log_odds
-        
+        after = get_belief_log_odds(state, "king_is_wise")
+
         assert after < before
     
     def test_counterfactual_parent_intervention_reduces_inflation(self):
@@ -329,13 +345,15 @@ class TestApplyBeliefUpdates:
         
         factual = state.copy()
         propagate_causal_effects(factual)
-        factual_score = factual.get_belief("king_is_wise").log_odds
-        
+        factual_score = get_belief_log_odds(factual, "king_is_wise")
+
         counterfactual = state.copy()
-        counterfactual.get_belief("castle_is_safe").log_odds = 0.0
+        counterfactual_castle = counterfactual.get_belief("castle_is_safe")
+        assert counterfactual_castle is not None
+        counterfactual_castle.log_odds = 0.0
         propagate_causal_effects(counterfactual)
-        counterfactual_score = counterfactual.get_belief("king_is_wise").log_odds
-        
+        counterfactual_score = get_belief_log_odds(counterfactual, "king_is_wise")
+
         assert factual_score > counterfactual_score
 
 # ---------------------------------------------------------------------------

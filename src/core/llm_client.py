@@ -22,10 +22,6 @@ logger = logging.getLogger(__name__)
 # Default model configuration
 DEFAULT_MODEL_NAME = "gemini-2.0-flash-exp"
 
-# Free Hugging Face models (no API key required)
-HF_FREE_MODEL = "microsoft/DialoGPT-medium"
-HF_FREE_API_URL = "https://api-inference.huggingface.co/models/"
-
 # Track which backend is active
 _active_backend = None  # "gemini", "huggingface", or None
 

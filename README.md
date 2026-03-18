@@ -7,7 +7,7 @@ A lightweight structured-state framework for persistent fictional agents in long
 
 ## Live Demo
 
-**[https://causal-character-graphs.streamlit.app](https://causal-character-graphs.streamlit.app)**
+**[https://pocketfm-dynamic-causal-graph-mvp-efwricwbepufnpdapqdptn.streamlit.app/]([https://causal-character-graphs.streamlit.app](https://pocketfm-dynamic-causal-graph-mvp-efwricwbepufnpdapqdptn.streamlit.app/))**
 
 ## Test Scenarios and Grounded Context
 

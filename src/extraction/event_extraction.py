@@ -13,6 +13,9 @@ in tests and offline demos.
 import re
 import json
 import logging
+import math
+import os
+from functools import lru_cache
 from typing import Optional, List, Dict, Any
 
 from core.data_structures import EventFrame
@@ -31,6 +34,71 @@ _TONE_MAP = {
     "surprise": ["wow", "really", "unexpected", "surprise"],
     "anticipation": ["hope", "expect", "wait", "looking forward"]
 }
+
+# Embedding labels for OOD matching fallback
+_EMBEDDING_LABELS: dict[str, list[str]] = {
+    "castle_is_safe": [
+        "the castle is safe",
+        "the fortress is secure",
+        "the stronghold feels protected",
+        "the castle is not unsafe",
+        "the fortress is not dangerous",
+    ],
+    "not_castle_is_safe": [
+        "the castle is unsafe",
+        "the fortress is dangerous",
+        "the stronghold is crumbling",
+    ],
+    "king_is_wise": [
+        "the king is wise",
+        "the ruler is intelligent",
+        "the monarch is trustworthy",
+    ],
+    "not_king_is_wise": [
+        "the king is foolish",
+        "the ruler is corrupt",
+        "the monarch is unwise",
+    ],
+    "forest_is_dangerous": [
+        "the forest is dangerous",
+        "the woods are unsafe",
+        "the woodland is threatening",
+    ],
+    "not_forest_is_dangerous": [
+        "the forest is safe",
+        "the woods feel calm",
+        "the woodland is peaceful",
+    ],
+    "ally_is_trustworthy": [
+        "my ally is completely trustworthy",
+        "my friend is reliable",
+        "my companion is faithful",
+    ],
+    "not_ally_is_trustworthy": [
+        "my ally is untrustworthy",
+        "they betrayed me",
+        "my companion is a traitor",
+    ],
+    "enemy_is_approaching": [
+        "the enemy is approaching",
+        "an army is coming",
+        "there is a threat nearby",
+    ],
+    "not_enemy_is_approaching": [
+        "the enemy is retreating",
+        "the threat is gone",
+    ],
+    "peace_declared": [
+        "peace has been declared",
+        "the war is over",
+    ],
+    "not_peace_declared": [
+        "the war has begun",
+        "peace is broken",
+    ]
+}
+
+_EMBEDDING_THRESHOLD = float(os.getenv("EMBEDDING_MATCH_THRESHOLD", "0.35"))
 
 def _normalize_base_prop(prop: str) -> str:
     p = prop.strip().lower()
@@ -118,222 +186,85 @@ def extract_event(user_message: str) -> EventFrame:
     -------
     EventFrame
     """
-    # Attempt LLM extraction first
-    if llm_client.configure_client():
+    if llm_client.configure_client() and llm_client.is_embedding_available():
         try:
-            return _extract_event_llm(user_message)
+            return _extract_event_pure_embeddings(user_message)
         except Exception as e:
-            logger.warning(f"LLM extraction failed: {e}. Falling back to rules.")
-    
-    # Fallback to rule-based extraction
-    return _extract_event_rules(user_message)
-
-
-def _extract_event_llm(user_message: str) -> EventFrame:
-    """Helper for LLM-based extraction."""
-    schema = {
-        "type": "object",
-        "properties": {
-            "propositions": {
-                "type": "array",
-                "items": {"type": "string"},
-                "description": "List of factual assertions in snake_case (e.g. 'door_is_locked', 'not_safe'). Use 'not_' prefix for negation."
-            },
-            "entities": {
-                "type": "array",
-                "items": {"type": "string"},
-                "description": "List of proper nouns or entities mentioned."
-            },
-            "emotional_tone": {
-                "type": "string",
-                "enum": ["joy", "anger", "sadness", "fear", "trust", "disgust", "surprise", "anticipation", "neutral"],
-                "description": "Dominant emotional tone of the speaker."
-            },
-            "confidence": {
-                "type": "number",
-                "minimum": 0.0,
-                "maximum": 1.0,
-                "description": "Confidence in the extraction (0.0 to 1.0)."
-            }
-        },
-        "required": ["propositions", "entities", "emotional_tone", "confidence"]
-    }
-
-    prompt = (
-        f"Analyze the following dialogue line from a user in a roleplay scenario.\n"
-        f"Extract factual propositions (snake_case), mentioned entities, and emotional tone.\n"
-        f"User Message: \"{user_message}\"\n"
-    )
-
-    result = llm_client.generate_structured(prompt, schema)
-    
-    if not result:
-        raise ValueError("LLM returned empty result")
-
-    return EventFrame(
-        propositions=result.get("propositions", []),
-        entities=result.get("entities", []),
-        speaker="user",
-        emotional_tone=result.get("emotional_tone", "neutral"),
-        confidence=float(result.get("confidence", 0.5)),
-        source_text=user_message
-    )
-
-
-def _extract_simple_propositions(message: str) -> list[str]:
-    """
-    Simple fallback extraction when semantic patterns don't match.
-    Extracts basic subject_predicate patterns from the message.
-    """
-    propositions = []
-    clauses = re.split(r'[.!?;,]', message)
-    
-    for clause in clauses:
-        clause = clause.strip().lower()
-        if not clause:
-            continue
+            logger.error(f"Embedding extraction failed: {e}")
+            raise RuntimeError("Event extraction requires a valid Gemini API key for embeddings.") from e
             
-        words = clause.split()
-        is_negated = any(neg in words for neg in ["not", "never", "no", "neither", "nor"])
-        
-        # Remove common stopwords
-        stopwords = {"not", "never", "no", "a", "an", "the", "is", "are", "was", "were", 
-                     "has", "have", "had", "be", "been", "being", "i", "you", "he", "she",
-                     "it", "we", "they", "that", "this", "and", "or", "but", "if", "then",
-                     "so", "very", "just", "really", "actually", "heard", "think", "believe"}
-        clean_words = [w for w in words if w not in stopwords and len(w) > 1]
-        
-        if len(clean_words) >= 2:
-            # Try to form a simple proposition from first noun + adjective/verb
-            prop = "_".join(clean_words[:3])  # Limit to 3 words max
-            if prop:
-                if is_negated:
-                    propositions.append(f"not_{prop}")
-                else:
-                    propositions.append(prop)
-    
-    return propositions
+    raise RuntimeError("Event extraction requires a valid Gemini API key for embeddings. Please set GEMINI_API_KEY in the sidebar.")
 
 
-def _extract_event_rules(user_message: str) -> EventFrame:
-    """
-    Rule-based fallback logic with keyword pattern matching.
-    
-    Uses semantic keyword patterns to extract meaningful propositions
-    that map to the belief schema, rather than simple word concatenation.
-    """
+
+
+
+def _extract_event_pure_embeddings(user_message: str) -> EventFrame:
+    """Implement fully embedding-based event extraction (propositions and tone)."""
     message = user_message.strip().lower()
     
-    # Semantic keyword patterns -> proposition mappings
-    # Each pattern is (keywords_any, keywords_all, negation_keywords, proposition)
-    # keywords_any: if ANY of these appear, consider the pattern
-    # keywords_all: ALL of these must appear (can be empty)
-    # negation_keywords: if ANY of these appear, negate the proposition
-    # proposition: the base proposition to emit
-    
-    SEMANTIC_PATTERNS = [
-        # Castle safety patterns
-        (["castle", "fortress", "walls", "stronghold"], [], 
-         ["unsafe", "dangerous", "crumbling", "falling", "broken", "weak", "not safe", "no longer safe", "isn't safe", "not secure"],
-         "castle_is_safe", True),  # True = negation_keywords indicate NEGATIVE proposition
-        (["castle", "fortress", "walls", "stronghold"], [],
-         ["safe", "secure", "strong", "protected", "solid", "sturdy"],
-         "castle_is_safe", False),  # False = these keywords indicate POSITIVE proposition
-        
-        # King wisdom patterns
-        (["king", "ruler", "monarch", "majesty"], [],
-         ["wise", "smart", "intelligent", "good", "just", "fair", "trustworthy", "honest"],
-         "king_is_wise", False),
-        (["king", "ruler", "monarch", "majesty"], [],
-         ["foolish", "stupid", "evil", "bad", "liar", "betrayed", "betrayal", "corrupt", "dishonest", "unwise"],
-         "king_is_wise", True),
-        
-        # Forest danger patterns
-        (["forest", "woods", "woodland"], [],
-         ["dangerous", "unsafe", "scary", "dark", "haunted", "monsters", "beasts", "threat"],
-         "forest_is_dangerous", False),
-        (["forest", "woods", "woodland"], [],
-         ["safe", "clear", "cleared", "peaceful", "calm", "secure"],
-         "forest_is_dangerous", True),
-        
-        # Trust patterns
-        (["ally", "friend", "companion"], [],
-         ["trustworthy", "trust", "reliable", "loyal", "honest", "faithful"],
-         "ally_is_trustworthy", False),
-        (["ally", "friend", "companion"], [],
-         ["untrustworthy", "betray", "betrayed", "traitor", "dishonest", "liar"],
-         "ally_is_trustworthy", True),
-        
-        # Enemy patterns  
-        (["enemy", "enemies", "foe", "army", "invader"], [],
-         ["approaching", "coming", "attack", "threat", "danger", "near"],
-         "enemy_is_approaching", False),
-        
-        # Peace/war patterns
-        (["peace", "war"], [],
-         ["declared", "over", "ended", "armistice", "treaty"],
-         "peace_declared", False),
-    ]
-    
-    propositions = []
-    
-    # Check for explicit negation in the message
-    has_negation = any(neg in message for neg in ["not ", "never ", "no ", "isn't", "aren't", "wasn't", "weren't", "don't", "doesn't", "didn't", "n't"])
-    
-    for keywords_any, keywords_all, indicator_keywords, base_prop, indicators_mean_negative in SEMANTIC_PATTERNS:
-        # Check if any primary keyword is present
-        if not any(kw in message for kw in keywords_any):
-            continue
-            
-        # Check if all required keywords are present
-        if keywords_all and not all(kw in message for kw in keywords_all):
-            continue
-            
-        # Check if indicator keywords are present
-        indicator_found = any(kw in message for kw in indicator_keywords)
-        
-        if indicator_found:
-            # Determine if this should be positive or negative
-            if indicators_mean_negative:
-                # The indicator keywords suggest the negative form
-                # But check for double negation (e.g., "not unsafe" = safe)
-                if has_negation and any(neg_kw in message for neg_kw in ["not unsafe", "not dangerous", "isn't dangerous", "not foolish", "not evil"]):
-                    propositions.append(base_prop)
-                else:
-                    propositions.append(f"not_{base_prop}")
-            else:
-                # The indicator keywords suggest the positive form
-                if has_negation:
-                    propositions.append(f"not_{base_prop}")
-                else:
-                    propositions.append(base_prop)
-    
-    # Deduplicate while preserving order
-    seen = set()
-    propositions = [p for p in propositions if not (p in seen or seen.add(p))]
-    
-    # If no semantic patterns matched, fall back to simple extraction
-    if not propositions:
-        propositions = _extract_simple_propositions(message)
+    message_embedding = llm_client.get_embedding(message)
+    if not message_embedding:
+        raise ValueError("Could not retrive embedding for message")
 
-    # 3. Entity extraction - use original message for proper case detection
+    # 1. Proposition matching via embeddings
+    propositions = []
+    best_prop = None
+    best_score = -1.0
+    for prop, labels in _EMBEDDING_LABELS.items():
+        for label in labels:
+            label_embedding = _get_label_embedding(label)
+            if not label_embedding:
+                continue
+            score = _cosine_similarity(message_embedding, label_embedding)
+            if score > best_score:
+                best_score = score
+                best_prop = prop
+
+    if best_prop is not None and best_score >= _EMBEDDING_THRESHOLD:
+        propositions.append(best_prop)
+
+    # 2. Emotional tone matching via embeddings
+    best_emo = "neutral"
+    best_emo_score = -1.0
+    for tone in _TONE_MAP.keys():
+        emo_label = f"The emotional tone is {tone}"
+        emo_emb = _get_label_embedding(emo_label)
+        if emo_emb:
+            score = _cosine_similarity(message_embedding, emo_emb)
+            if score > best_emo_score:
+                best_emo_score = score
+                best_emo = tone
+                
+    # 3. Entity extraction (fallback to regex since embeddings can't extract specific nouns)
     entities = list(set(re.findall(r'\b(?:[A-Z][a-z]+(?:_[A-Z][a-z]+)*|[A-Z]{2,})\b', user_message)))
     
-    # 4. Tone detection (message is already lowercase)
-    detected_tone = "neutral"
-    for tone, keywords in _TONE_MAP.items():
-        if any(word in message for word in keywords):
-            detected_tone = tone
-            break
-
     return EventFrame(
         propositions=propositions,
         entities=entities,
         speaker="user",
-        emotional_tone=detected_tone,
+        emotional_tone=best_emo,
         confidence=1.0 if propositions else 0.5,
         source_text=user_message
     )
+
+
+def _cosine_similarity(vec_a: list[float], vec_b: list[float]) -> float:
+    """Compute cosine similarity for two vectors."""
+    if not vec_a or not vec_b or len(vec_a) != len(vec_b):
+        return -1.0
+    dot = sum(a * b for a, b in zip(vec_a, vec_b))
+    norm_a = math.sqrt(sum(a * a for a in vec_a))
+    norm_b = math.sqrt(sum(b * b for b in vec_b))
+    if norm_a == 0.0 or norm_b == 0.0:
+        return -1.0
+    return dot / (norm_a * norm_b)
+
+
+@lru_cache(maxsize=256)
+def _get_label_embedding(label: str) -> list[float] | None:
+    """Cache embeddings for label phrases."""
+    return llm_client.get_embedding(label)
 
 
 def validate_event(

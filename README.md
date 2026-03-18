@@ -1,27 +1,29 @@
 # Dynamic Causal Character Graphs
 
-[![CI](https://github.com/rajarshi51382/PocketFM-Dynamic-Causal-Graph-MVP/actions/workflows/deploy.yml/badge.svg)](https://github.com/rajarshi51382/PocketFM-Dynamic-Causal-Graph-MVP/actions/workflows/deploy.yml)
+[![CI](https://github.com/itsloganmann/PocketFM-Dynamic-Causal-Graph-MVP/actions/workflows/deploy.yml/badge.svg)](https://github.com/itsloganmann/PocketFM-Dynamic-Causal-Graph-MVP/actions/workflows/deploy.yml)
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://causal-character-graphs.streamlit.app)
 
 A lightweight structured-state framework for persistent fictional agents in long-form dialogue systems.
 
-## 🚀 Live Demo
+## Live Demo
 
-**Try it online → [https://causal-character-graphs.streamlit.app](https://causal-character-graphs.streamlit.app)**
+**[https://causal-character-graphs.streamlit.app](https://causal-character-graphs.streamlit.app)**
 
-### ✨ All Features Work Free — No API Keys Required!
+## Test Scenarios and Grounded Context
 
-The demo runs in your browser with no installation or API keys needed. All features are live:
-- **Belief revision** — log-odds updates as you chat
-- **Causal propagation** — A→B belief graph updates in real time
-- **Emotional state** — valence / arousal bars update after each turn
-- **Relationship tracking** — trust, affection, respect per entity
-- **Smart dialogue generation** — contextually-aware character responses
-- **Scenario presets** — one-click narrative events
-- **Save / load / download** — persist and restore the full simulation state
+- Scenario checklist: `docs/scenarios.md`
+- Grounded context and assumptions: `docs/context.md`
 
-> **Optional**: Add a Gemini API key for enhanced LLM-powered responses
+### Gemini API Key Required
+- **Belief revision** - log-odds updates as you chat
+- **Causal propagation** - A to B belief graph updates in real time
+- **Emotional state** - valence and arousal bars update after each turn
+- **Relationship tracking** - trust, affection, respect per entity
+- **Smart dialogue generation** - contextually-aware character responses
+- **Scenario presets** - one-click narrative events
+- **Save, load, download** - persist and restore the full simulation state
 
+> **Required**: A Gemini API key must be provided to use Gemini Embeddings 2 for narrative extraction.
 ## Overview
 
 Large language models lack an explicit representation of persistent psychological state, causing personality drift and motivational inconsistency in extended interactions. This project implements Dynamic Causal Character Graphs (DCCGs), a structured causal framework that models a character's core traits, beliefs, and world constraints as a directed acyclic graph.
@@ -62,6 +64,15 @@ tests/
 
 demo/
   demo_conversations.py     - Offline demo showing belief state evolution
+
+docs/
+  context.md                - Grounded context and assumptions
+  scenarios.md              - Scenario test checklist
+  deploy.md                 - Deployment guide
+  huggingface.md            - Hugging Face deployment notes
+
+data/
+  timeline_seeds.json       - Timestamp-based seed states for testing
 ```
 
 ## Belief Update Logic
@@ -105,10 +116,9 @@ Then open `http://localhost:8501` in your browser.
 3. Click **"New app"** → select your repository and branch.
 4. Set the **Main file path** to `streamlit_app.py`.
 5. **Set a custom subdomain** (e.g., `causal-character-graphs`) in Advanced settings for a clean URL.
-6. Click **Deploy** — your app will be live at a permanent `*.streamlit.app` URL within minutes.
+6. Click **Deploy** - your app will be live at a permanent `*.streamlit.app` URL within minutes.
 
-> **Note**: No API keys or secrets are required. All features work out of the box!
-
+> **Note**: A Gemini API key is required to use the embedding-based extraction engine.
 ## Running Tests
 
 ```bash

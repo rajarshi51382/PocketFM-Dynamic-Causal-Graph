@@ -63,7 +63,7 @@ class TraitState:
     traits : dict[str, float]
         Mapping of trait name → intensity (clamped to [-1, 1]).
     plasticity : float
-        Base plasticity α ∈ [0, 1] — should be small for traits.
+        Base plasticity α ∈ [0, 1] - should be small for traits.
     """
 
     def __init__(self, traits: Dict[str, float], plasticity: float = 0.05):
@@ -184,7 +184,7 @@ class RelationshipState:
 
     --------------
     R_t(x) = (trust, affection, respect) ∈ [0, 1]³.
-    Semi-stable nodes — moderate plasticity.
+    Semi-stable nodes - moderate plasticity.
 
     Attributes
     ----------
@@ -251,7 +251,7 @@ class BeliefNode:
     Attributes
     ----------
     proposition      : str    the propositional content φ_k
-    log_odds         : float  ℓ_{t,k} — unbounded real
+    log_odds         : float  ℓ_{t,k} - unbounded real
     evidence_sources : list   provenance identifiers S_k
     plasticity       : float  ∈ [0, 1]
     """
@@ -685,10 +685,10 @@ class EventFrame:
 
     Attributes
     ----------
-    propositions : list[str]   P_t — asserted propositions
-    entities     : list[str]   E_t — referenced entity IDs
-    speaker      : str         a_t — who is speaking
-    emotional_tone: str        τ_t — emotional tone label
+    propositions : list[str]   P_t - asserted propositions
+    entities     : list[str]   E_t - referenced entity IDs
+    speaker      : str         a_t - who is speaking
+    emotional_tone: str        τ_t - emotional tone label
     confidence   : float       c_t ∈ [0, 1]
     turn_index   : int         which dialogue turn this came from
     source_text  : str         raw input (for provenance / debugging)

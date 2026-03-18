@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - production
   pull_request:
     branches:
       - main
@@ -45,6 +46,7 @@ jobs:
   validate-app:
     runs-on: ubuntu-latest
     needs: test
+    if: github.ref == 'refs/heads/production'
     
     steps:
       - name: Checkout code
@@ -70,10 +72,10 @@ jobs:
   notify-deploy:
     runs-on: ubuntu-latest
     needs: [test, validate-app]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/production' && github.event_name == 'push'
     
     steps:
       - name: Deployment notification
         run: |
-          echo "✅ All tests passed! Streamlit Cloud will auto-deploy from main branch."
-          echo "🔗 App URL: https://causal-character-graphs.streamlit.app/"
+          echo "All tests passed. Streamlit Cloud will auto-deploy from production branch."
+          echo "App URL: https://causal-character-graphs.streamlit.app/"

@@ -16,7 +16,6 @@ import logging
 from typing import Optional, List
 
 from core.data_structures import CharacterState
-from core import llm_client
 
 logger = logging.getLogger(__name__)
 
@@ -158,7 +157,7 @@ def build_generation_prompt(state: CharacterState, user_message: str) -> str:
 
 def generate_response(prompt: str) -> Optional[str]:
     """
-    Generate dialogue using an LLM, with a rule-based fallback.
+    Generate dialogue using rule-based generation conditioned on embeddings graph.
 
     Preconditions
     -------------
@@ -166,9 +165,7 @@ def generate_response(prompt: str) -> Optional[str]:
 
     Procedure
     ---------
-    1. Check for configured LLM client.
-    2. If available, generate text response.
-    3. If unavailable/fails, use rule-based fallback.
+    1. Generate rule-based response.
 
     Postconditions
     --------------
@@ -183,16 +180,6 @@ def generate_response(prompt: str) -> Optional[str]:
     Optional[str]
         Generated response text.
     """
-    # Attempt LLM generation first
-    if llm_client.configure_client():
-        try:
-            response = llm_client.generate_text(prompt, max_tokens=150)
-            if response:
-                return response.strip()
-        except Exception as e:
-            logger.warning(f"LLM generation failed: {e}. Falling back to rules.")
-
-    # Fallback to rule-based generation
     return _generate_response_rules(prompt)
 
 

@@ -1,0 +1,44 @@
+{
+  "baseline": {
+    "label": "Baseline",
+    "timeline_index": 0,
+    "beliefs": {
+      "castle_is_safe": 1.5,
+      "forest_is_dangerous": 1.0,
+      "king_is_wise": 0.5
+    },
+    "relationships": {}
+  },
+  "after_betrayal": {
+    "label": "After betrayal",
+    "timeline_index": 3,
+    "beliefs": {
+      "castle_is_safe": 0.3,
+      "forest_is_dangerous": 1.2,
+      "king_is_wise": -0.6
+    },
+    "relationships": {
+      "king": {
+        "trust": 0.2,
+        "affection": 0.2,
+        "respect": 0.3
+      }
+    }
+  },
+  "after_peace": {
+    "label": "After peace",
+    "timeline_index": 6,
+    "beliefs": {
+      "castle_is_safe": 1.2,
+      "forest_is_dangerous": 0.2,
+      "king_is_wise": 0.8
+    },
+    "relationships": {
+      "king": {
+        "trust": 0.7,
+        "affection": 0.6,
+        "respect": 0.7
+      }
+    }
+  }
+}

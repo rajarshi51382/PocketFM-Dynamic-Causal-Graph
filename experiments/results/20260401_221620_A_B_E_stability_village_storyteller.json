@@ -1,0 +1,44 @@
+[
+  {
+    "variant": "A",
+    "variant_description": "Baseline LM \u2014 context-only generation, no structured state.",
+    "scenario": "stability:village_storyteller",
+    "n_turns": 20,
+    "character_id": "ElenaStoryteller",
+    "dry_run": true,
+    "UDR": 0.0,
+    "FAR": 0.0,
+    "mean_G": 1.0,
+    "mean_NC": 1.0,
+    "leakage_rate": 0.0,
+    "H": 0.0
+  },
+  {
+    "variant": "B",
+    "variant_description": "State-Only (DCCG) \u2014 Two-phase Update\u2013Act loop, direct generation.",
+    "scenario": "stability:village_storyteller",
+    "n_turns": 20,
+    "character_id": "ElenaStoryteller",
+    "dry_run": true,
+    "UDR": 0.0,
+    "FAR": 0.0,
+    "mean_G": 1.0,
+    "mean_NC": 1.0,
+    "leakage_rate": 0.0,
+    "H": 0.0
+  },
+  {
+    "variant": "E",
+    "variant_description": "Full Pipeline \u2014 State + Planning + Verification (complete DCCG).",
+    "scenario": "stability:village_storyteller",
+    "n_turns": 20,
+    "character_id": "ElenaStoryteller",
+    "dry_run": true,
+    "UDR": 0.0,
+    "FAR": 0.0,
+    "mean_G": 1.0,
+    "mean_NC": 1.0,
+    "leakage_rate": 0.0,
+    "H": 0.0
+  }
+]

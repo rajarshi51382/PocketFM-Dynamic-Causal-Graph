@@ -1,0 +1,1234 @@
+{
+  "benchmark_metadata": {
+    "version": "3.0",
+    "total_scenarios": 10,
+    "total_test_sequences": 24,
+    "total_scripted_turns": 195,
+    "graph_topologies_covered": [
+      "simple_pair",
+      "simple_chain",
+      "diamond",
+      "convergent_pair",
+      "anticorrelated_pair",
+      "isolated_nodes",
+      "source_credibility"
+    ],
+    "failure_modes_covered": [
+      "personality_drift",
+      "belief_erosion",
+      "failure_to_adapt",
+      "conflicting_sources",
+      "diamond_propagation",
+      "temporal_leakage",
+      "hallucination_loop",
+      "save_load_corruption",
+      "emotional_trait_leakage",
+      "spurious_correlation"
+    ],
+    "metrics_covered": [
+      "UDR",
+      "FAR",
+      "H",
+      "KnowledgeLeak",
+      "causal_propagation_correctness",
+      "source_credibility_correctness",
+      "serialization_fidelity",
+      "spurious_correlation_rate"
+    ]
+  },
+  "sir_galahad": {
+    "label": "Sir Galahad",
+    "category": "trait_stability",
+    "failure_mode": "personality_drift_under_neutral_dialogue",
+    "graph_topology": "simple_chain",
+    "character_id": "Sir_Galahad",
+    "timeline_index": 0,
+    "knowledge_boundary": 0,
+    "traits": {
+      "bravery": 0.8,
+      "honesty": 0.6,
+      "neuroticism": 0.4,
+      "trusting": 0.2
+    },
+    "beliefs": {
+      "castle_is_safe": 1.5,
+      "forest_is_dangerous": 1.0,
+      "king_is_wise": 0.5
+    },
+    "relationships": {},
+    "causal_links": [
+      {
+        "antecedent": "castle_is_safe",
+        "consequent": "king_is_wise",
+        "weight": 0.8
+      },
+      {
+        "antecedent": "forest_is_dangerous",
+        "consequent": "castle_is_safe",
+        "weight": 0.5
+      }
+    ],
+    "world_constraints": [],
+    "test_sequences": {
+      "stability_20_turns": {
+        "type": "stability",
+        "metric": "UDR",
+        "description": "20 turns of neutral small talk. No beliefs or traits should drift.",
+        "inputs": [
+          "What is your name?",
+          "Tell me about your day.",
+          "What do you think about the weather?",
+          "Have you eaten today?",
+          "What is your favorite weapon?",
+          "Do you have any hobbies?",
+          "Tell me about your training.",
+          "What did you dream about last night?",
+          "Do you prefer morning or evening?",
+          "What music do you enjoy?",
+          "Have you traveled far?",
+          "What do you think about horses?",
+          "Tell me a memory from childhood.",
+          "What is your favorite season?",
+          "Do you enjoy reading?",
+          "What food do you prefer?",
+          "Tell me about your armor.",
+          "Do you have any friends?",
+          "What makes you laugh?",
+          "How do you spend your evenings?"
+        ],
+        "expected": {
+          "all_beliefs_delta_per_turn": "< 0.05",
+          "all_traits_delta_per_turn": "< 0.01"
+        }
+      },
+      "betrayal_growth": {
+        "type": "growth",
+        "metric": "FAR",
+        "description": "Neutral then high-impact betrayal. Semi-stable beliefs shift; stable traits hold.",
+        "inputs": [
+          "How are things at the castle?",
+          "Is the king holding court today?",
+          "What is the mood in the kingdom?",
+          "The king has betrayed the kingdom and sold the castle to the enemy.",
+          "The king's guards are attacking villagers.",
+          "The castle gates have been opened to invaders.",
+          "Families are fleeing through the forest.",
+          "Can you still trust the king?",
+          "What will you do now?",
+          "Is there any hope left?"
+        ],
+        "expected": {
+          "turns_1_to_3_all_beliefs_delta": "< 0.05",
+          "turn_4_king_is_wise_delta": "< -0.3",
+          "turns_5_to_7_castle_is_safe_cumulative": "< -0.5",
+          "all_turns_bravery_delta": "< 0.01",
+          "all_turns_honesty_delta": "< 0.01"
+        }
+      },
+      "causal_cascade": {
+        "type": "belief_revision",
+        "metric": "causal_propagation_correctness",
+        "description": "Decrease castle_is_safe and verify king_is_wise follows via causal link.",
+        "inputs": [
+          "The castle walls are crumbling.",
+          "The moat has dried up completely.",
+          "Invaders breached the outer wall.",
+          "The castle is no longer defensible.",
+          "Is the king still wise for staying?"
+        ],
+        "expected": {
+          "castle_is_safe_delta_each_turn": "< 0",
+          "king_is_wise_should_follow_castle_direction": true
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 0
+      },
+      "after_betrayal": {
+        "timeline_index": 3,
+        "beliefs": {
+          "castle_is_safe": 0.3,
+          "forest_is_dangerous": 1.2,
+          "king_is_wise": -0.6
+        },
+        "relationships": {
+          "king": {
+            "trust": 0.2,
+            "affection": 0.2,
+            "respect": 0.3
+          }
+        }
+      },
+      "after_peace": {
+        "timeline_index": 6,
+        "beliefs": {
+          "castle_is_safe": 1.2,
+          "forest_is_dangerous": 0.2,
+          "king_is_wise": 0.8
+        },
+        "relationships": {
+          "king": {
+            "trust": 0.7,
+            "affection": 0.6,
+            "respect": 0.7
+          }
+        }
+      }
+    }
+  },
+  "the_tortoise": {
+    "label": "The Tortoise",
+    "category": "trait_stability",
+    "failure_mode": "core_belief_erosion_under_repeated_pressure",
+    "graph_topology": "simple_pair",
+    "character_id": "Tortoise",
+    "timeline_index": 0,
+    "knowledge_boundary": 10,
+    "traits": {
+      "bravery": 0.3,
+      "honesty": 0.8,
+      "neuroticism": 0.0,
+      "trusting": 0.0,
+      "patience": 0.9,
+      "persistence": 1.0
+    },
+    "beliefs": {
+      "slow_and_steady_wins": 1.5,
+      "race_is_winnable": 1.2,
+      "hare_is_overconfident": 1.0
+    },
+    "relationships": {
+      "hare": {
+        "trust": 0.2,
+        "affection": 0.1,
+        "respect": 0.2
+      }
+    },
+    "causal_links": [
+      {
+        "antecedent": "slow_and_steady_wins",
+        "consequent": "race_is_winnable",
+        "weight": 0.8
+      }
+    ],
+    "world_constraints": [],
+    "test_sequences": {
+      "pressure_resistance": {
+        "type": "stability",
+        "metric": "UDR",
+        "description": "Repeated mockery (low sigma) should not erode core beliefs.",
+        "inputs": [
+          "You are so slow, you will never win.",
+          "The hare is much faster than you.",
+          "Everyone is laughing at you.",
+          "You should just give up.",
+          "You have no chance at all.",
+          "The hare says you are pathetic.",
+          "Why do you even bother trying?",
+          "Nobody believes in you.",
+          "The crowd thinks this is a joke.",
+          "You are wasting everyone's time."
+        ],
+        "expected": {
+          "slow_and_steady_wins_delta_per_turn": "< 0.05",
+          "patience_delta": "< 0.01",
+          "persistence_delta": "< 0.01"
+        }
+      },
+      "confirming_evidence": {
+        "type": "growth",
+        "metric": "FAR",
+        "description": "Actual race events should update beliefs. Hare sleeping is high sigma.",
+        "inputs": [
+          "The race has begun. The hare sprints ahead.",
+          "You are far behind but moving steadily.",
+          "The hare has stopped to eat some berries.",
+          "The hare has fallen asleep under a tree.",
+          "You are passing the sleeping hare right now.",
+          "You can see the finish line ahead.",
+          "You crossed the finish line first!",
+          "The crowd is cheering for you.",
+          "The hare woke up and cannot believe it.",
+          "Everyone says you were right all along."
+        ],
+        "expected": {
+          "turn_4_hare_is_overconfident_delta": "> 0.2",
+          "turn_7_race_is_winnable_cumulative": "> 0.5",
+          "turn_9_relationship_hare_respect": "unchanged_or_decrease"
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 0
+      },
+      "mid_race": {
+        "timeline_index": 5,
+        "beliefs": {
+          "slow_and_steady_wins": 1.6,
+          "race_is_winnable": 1.5,
+          "hare_is_overconfident": 1.5
+        }
+      },
+      "after_victory": {
+        "timeline_index": 10,
+        "beliefs": {
+          "slow_and_steady_wins": 2.5,
+          "race_is_winnable": 2.0,
+          "hare_is_overconfident": 2.0
+        }
+      }
+    }
+  },
+  "the_hare": {
+    "label": "The Hare",
+    "category": "shock_gated_growth",
+    "failure_mode": "failure_to_adapt_after_high_impact_event",
+    "graph_topology": "simple_chain",
+    "character_id": "Hare",
+    "timeline_index": 0,
+    "knowledge_boundary": 10,
+    "traits": {
+      "bravery": 0.6,
+      "honesty": 0.3,
+      "neuroticism": 0.2,
+      "trusting": 0.5,
+      "arrogance": 0.9,
+      "impulsivity": 0.8
+    },
+    "beliefs": {
+      "i_am_fastest": 2.5,
+      "race_is_easy": 2.0,
+      "tortoise_is_irrelevant": 1.5
+    },
+    "relationships": {
+      "tortoise": {
+        "trust": 0.3,
+        "affection": 0.1,
+        "respect": 0.05
+      }
+    },
+    "causal_links": [
+      {
+        "antecedent": "i_am_fastest",
+        "consequent": "race_is_easy",
+        "weight": 0.7
+      },
+      {
+        "antecedent": "race_is_easy",
+        "consequent": "tortoise_is_irrelevant",
+        "weight": 0.6
+      }
+    ],
+    "world_constraints": [],
+    "test_sequences": {
+      "overconfidence_buildup": {
+        "type": "stability",
+        "metric": "UDR",
+        "description": "Confirming evidence on already-high beliefs. Tests diminishing returns.",
+        "inputs": [
+          "You are in the lead by a mile!",
+          "The crowd is cheering your name.",
+          "The tortoise is nowhere in sight.",
+          "You are the fastest creature in the land.",
+          "Nobody can catch you.",
+          "The race is practically over already.",
+          "You have time to spare.",
+          "Why not rest for a moment?",
+          "The sun is warm. A nap would be nice.",
+          "You close your eyes under the oak tree."
+        ],
+        "expected": {
+          "beliefs_should_stay_high": true,
+          "beliefs_should_not_overshoot_log_odds_5": true
+        }
+      },
+      "shock_collapse": {
+        "type": "growth",
+        "metric": "FAR",
+        "description": "Sudden loss after sustained overconfidence. Causal chain should cascade the shock.",
+        "inputs": [
+          "You wake up from your nap.",
+          "The tortoise is near the finish line.",
+          "You sprint but the tortoise crosses first.",
+          "You lost the race.",
+          "The crowd is silent.",
+          "The tortoise looks at you calmly.",
+          "Everyone you boasted to is watching.",
+          "The tortoise says slow and steady wins.",
+          "How do you feel about yourself now?",
+          "Was the race really that easy?"
+        ],
+        "expected": {
+          "turn_2_race_is_easy_delta": "< -0.5",
+          "turn_4_chain_collapse": true,
+          "tortoise_is_irrelevant_cumulative": "< -0.5",
+          "relationship_tortoise_respect_increase": true,
+          "impulsivity_trait_delta": "< 0.01"
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 0
+      },
+      "pre_nap": {
+        "timeline_index": 5,
+        "beliefs": {
+          "i_am_fastest": 2.6,
+          "race_is_easy": 2.1,
+          "tortoise_is_irrelevant": 1.6
+        }
+      },
+      "after_loss": {
+        "timeline_index": 10,
+        "beliefs": {
+          "i_am_fastest": 1.5,
+          "race_is_easy": -0.5,
+          "tortoise_is_irrelevant": -1.0
+        },
+        "relationships": {
+          "tortoise": {
+            "trust": 0.4,
+            "affection": 0.2,
+            "respect": 0.5
+          }
+        }
+      }
+    }
+  },
+  "the_fox": {
+    "label": "The Fox",
+    "category": "belief_revision",
+    "failure_mode": "incorrect_belief_update_under_conflicting_sources",
+    "graph_topology": "source_credibility_test",
+    "character_id": "Fox",
+    "timeline_index": 0,
+    "knowledge_boundary": 10,
+    "traits": {
+      "bravery": 0.5,
+      "honesty": 0.3,
+      "neuroticism": 0.5,
+      "trusting": 0.4,
+      "cunning": 0.9,
+      "skepticism": 0.8
+    },
+    "beliefs": {
+      "grapes_are_reachable": 0.0,
+      "crow_is_trustworthy": 0.0,
+      "cheese_exists": 1.0
+    },
+    "relationships": {
+      "crow": {
+        "trust": 0.3,
+        "affection": 0.2,
+        "respect": 0.4
+      },
+      "badger": {
+        "trust": 0.9,
+        "affection": 0.7,
+        "respect": 0.8
+      }
+    },
+    "causal_links": [
+      {
+        "antecedent": "crow_is_trustworthy",
+        "consequent": "cheese_exists",
+        "weight": 0.6
+      }
+    ],
+    "world_constraints": [],
+    "test_sequences": {
+      "conflicting_testimony": {
+        "type": "belief_revision",
+        "metric": "source_credibility_correctness",
+        "description": "Trusted badger and untrusted crow give conflicting information.",
+        "inputs": [
+          "The crow says the grapes are definitely reachable.",
+          "The badger says the grapes are far too high.",
+          "The crow insists you just need to jump higher.",
+          "The badger says the crow is lying to trick you.",
+          "The crow offers to show you how to reach them.",
+          "The badger says he saw the crow eat all the low grapes already.",
+          "Who should you believe about the grapes?",
+          "The crow flies away without helping.",
+          "The badger offers to help you find berries instead.",
+          "Was the crow ever trustworthy?"
+        ],
+        "expected": {
+          "turn_1_grapes_small_positive": "crow trust=0.3",
+          "turn_2_grapes_larger_negative": "badger trust=0.9 outweighs",
+          "turn_4_crow_trustworthy_decrease": true,
+          "turns_8_to_9_crow_trustworthy_strongly_negative": true
+        }
+      },
+      "trust_reversal": {
+        "type": "growth",
+        "metric": "FAR",
+        "description": "New evidence reverses which source is credible.",
+        "inputs": [
+          "The badger has been caught stealing food from others.",
+          "Several animals say the badger lies about everything.",
+          "The crow actually left you a pile of cheese.",
+          "The crow says it was trying to help you all along.",
+          "The badger admits he wanted the grapes for himself.",
+          "Do you still trust the badger?",
+          "Was the crow right about the grapes?",
+          "The crow offers to be your ally.",
+          "What do you think about trust now?",
+          "Who are your real friends?"
+        ],
+        "expected": {
+          "turns_1_to_2_badger_trust_drops": true,
+          "turn_3_crow_trustworthy_increases": "direct observation",
+          "turn_5_full_reversal": true
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 0
+      },
+      "after_deception": {
+        "timeline_index": 5,
+        "beliefs": {
+          "grapes_are_reachable": -0.5,
+          "crow_is_trustworthy": -1.0,
+          "cheese_exists": 0.5
+        },
+        "relationships": {
+          "crow": {
+            "trust": 0.1,
+            "affection": 0.1,
+            "respect": 0.2
+          },
+          "badger": {
+            "trust": 0.9,
+            "affection": 0.7,
+            "respect": 0.8
+          }
+        }
+      },
+      "after_reversal": {
+        "timeline_index": 10,
+        "beliefs": {
+          "grapes_are_reachable": 0.5,
+          "crow_is_trustworthy": 0.8,
+          "cheese_exists": 1.5
+        },
+        "relationships": {
+          "crow": {
+            "trust": 0.7,
+            "affection": 0.5,
+            "respect": 0.6
+          },
+          "badger": {
+            "trust": 0.2,
+            "affection": 0.3,
+            "respect": 0.2
+          }
+        }
+      }
+    }
+  },
+  "the_ox": {
+    "label": "The Ox",
+    "category": "belief_revision",
+    "failure_mode": "incorrect_propagation_in_diamond_topology",
+    "graph_topology": "diamond",
+    "character_id": "Ox",
+    "timeline_index": 0,
+    "knowledge_boundary": 10,
+    "traits": {
+      "bravery": 0.4,
+      "honesty": 0.9,
+      "neuroticism": 0.1,
+      "trusting": 0.6,
+      "diligence": 0.95,
+      "stubbornness": 0.7
+    },
+    "beliefs": {
+      "farm_is_prosperous": 1.5,
+      "harvest_will_be_good": 1.0,
+      "farmer_is_kind": 1.2,
+      "future_is_secure": 0.8
+    },
+    "relationships": {
+      "farmer": {
+        "trust": 0.8,
+        "affection": 0.6,
+        "respect": 0.7
+      }
+    },
+    "causal_links": [
+      {
+        "antecedent": "farm_is_prosperous",
+        "consequent": "harvest_will_be_good",
+        "weight": 0.7
+      },
+      {
+        "antecedent": "farm_is_prosperous",
+        "consequent": "farmer_is_kind",
+        "weight": 0.5
+      },
+      {
+        "antecedent": "harvest_will_be_good",
+        "consequent": "future_is_secure",
+        "weight": 0.6
+      },
+      {
+        "antecedent": "farmer_is_kind",
+        "consequent": "future_is_secure",
+        "weight": 0.6
+      }
+    ],
+    "world_constraints": [],
+    "test_sequences": {
+      "diamond_collapse": {
+        "type": "belief_revision",
+        "metric": "causal_propagation_correctness",
+        "description": "Decrease root node and verify two-path propagation to leaf.",
+        "inputs": [
+          "A terrible drought has destroyed the western fields.",
+          "The river that feeds the farm has dried up.",
+          "Half the crops have withered and died.",
+          "The farmer looks exhausted and worried.",
+          "The farmer shouted at the farmhands today.",
+          "The market price for grain has tripled.",
+          "Other farms in the valley have already failed.",
+          "There is talk of selling the livestock.",
+          "Winter is coming and the stores are empty.",
+          "Do you think the future is secure?"
+        ],
+        "expected": {
+          "farm_is_prosperous_cumulative": "< -0.5",
+          "harvest_and_farmer_both_decrease_via_propagation": true,
+          "future_is_secure_larger_than_single_path": true,
+          "diligence_trait_delta": "< 0.01"
+        }
+      },
+      "partial_recovery": {
+        "type": "growth",
+        "metric": "causal_propagation_correctness",
+        "description": "One path recovers while other stays bad. Tests asymmetric convergent propagation.",
+        "inputs": [
+          "Rain clouds are forming on the horizon.",
+          "It rained heavily all night!",
+          "The crops are showing new growth.",
+          "The harvest might be saved after all.",
+          "But the farmer is still shouting and angry.",
+          "The farmer refused to feed the animals properly.",
+          "The harvest looks strong now despite everything.",
+          "Is the future secure yet?",
+          "The farmer has not changed his ways.",
+          "Can a good harvest overcome a cruel farmer?"
+        ],
+        "expected": {
+          "harvest_recovers": true,
+          "farmer_stays_negative": true,
+          "future_is_secure_mixed_signal": "closer to neutral than either extreme"
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 0
+      },
+      "after_drought": {
+        "timeline_index": 5,
+        "beliefs": {
+          "farm_is_prosperous": -0.5,
+          "harvest_will_be_good": -0.3,
+          "farmer_is_kind": 0.0,
+          "future_is_secure": -0.5
+        }
+      },
+      "after_partial_recovery": {
+        "timeline_index": 10,
+        "beliefs": {
+          "farm_is_prosperous": 0.5,
+          "harvest_will_be_good": 0.8,
+          "farmer_is_kind": -0.5,
+          "future_is_secure": 0.1
+        }
+      }
+    }
+  },
+  "the_lion": {
+    "label": "The Lion",
+    "category": "temporal_leakage",
+    "failure_mode": "character_reveals_future_knowledge",
+    "graph_topology": "convergent_pair",
+    "character_id": "Lion",
+    "timeline_index": 3,
+    "knowledge_boundary": 3,
+    "traits": {
+      "bravery": 1.0,
+      "honesty": 0.7,
+      "neuroticism": 0.2,
+      "trusting": 0.3,
+      "authority": 0.9,
+      "protectiveness": 0.8
+    },
+    "beliefs": {
+      "pride_is_safe": 1.5,
+      "hunting_grounds_are_plentiful": 1.0,
+      "hyenas_are_distant": 0.8
+    },
+    "relationships": {
+      "lioness": {
+        "trust": 0.9,
+        "affection": 0.8,
+        "respect": 0.9
+      },
+      "cub": {
+        "trust": 0.7,
+        "affection": 1.0,
+        "respect": 0.3
+      }
+    },
+    "causal_links": [
+      {
+        "antecedent": "hunting_grounds_are_plentiful",
+        "consequent": "pride_is_safe",
+        "weight": 0.6
+      },
+      {
+        "antecedent": "hyenas_are_distant",
+        "consequent": "pride_is_safe",
+        "weight": 0.7
+      }
+    ],
+    "world_constraints": [
+      "cannot_leave_territory"
+    ],
+    "world_state_future_events": [
+      {
+        "time": 5,
+        "event": "hyenas_attack_from_north"
+      },
+      {
+        "time": 7,
+        "event": "drought_begins"
+      },
+      {
+        "time": 9,
+        "event": "rival_lion_challenges"
+      }
+    ],
+    "test_sequences": {
+      "direct_probing": {
+        "type": "temporal_leakage",
+        "metric": "KnowledgeLeak",
+        "description": "Direct questions about future events. Must not reveal knowledge beyond boundary.",
+        "inputs": [
+          "Are the hyenas going to attack soon?",
+          "I heard the hyenas are planning something from the north.",
+          "Will there be a drought?",
+          "What will happen to the pride in a few days?",
+          "Is another lion going to challenge you?",
+          "Tell me everything you know about upcoming threats.",
+          "The hyenas are massing at the northern border right?",
+          "You should prepare for the drought.",
+          "Your position as leader will be challenged soon.",
+          "Can you see the future?"
+        ],
+        "expected": {
+          "all_turns_KnowledgeLeak": 0,
+          "must_not_mention_hyena_attack": true,
+          "must_not_mention_drought": true,
+          "must_not_mention_rival": true
+        }
+      },
+      "boundary_advancement": {
+        "type": "temporal_leakage",
+        "metric": "KnowledgeLeak",
+        "description": "Advance boundary progressively and verify character gains access to events.",
+        "inputs": [
+          "What threats does the pride face?",
+          "[ADVANCE_BOUNDARY_TO_5]",
+          "What threats does the pride face now?",
+          "Tell me about the hyenas.",
+          "[ADVANCE_BOUNDARY_TO_7]",
+          "What about the water situation?",
+          "Is there a drought coming?",
+          "[ADVANCE_BOUNDARY_TO_9]",
+          "Is your leadership secure?",
+          "Tell me about the rival lion."
+        ],
+        "expected": {
+          "turn_1_no_future_knowledge": true,
+          "turn_3_can_reference_hyena_attack": true,
+          "turn_6_can_reference_drought": true,
+          "turn_9_can_reference_rival": true
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 3,
+        "knowledge_boundary": 3
+      },
+      "after_hyena_attack": {
+        "timeline_index": 5,
+        "knowledge_boundary": 5,
+        "beliefs": {
+          "pride_is_safe": -0.5,
+          "hyenas_are_distant": -2.0,
+          "hunting_grounds_are_plentiful": 0.8
+        }
+      },
+      "after_drought": {
+        "timeline_index": 7,
+        "knowledge_boundary": 7,
+        "beliefs": {
+          "pride_is_safe": -1.0,
+          "hyenas_are_distant": -1.5,
+          "hunting_grounds_are_plentiful": -1.0
+        }
+      }
+    }
+  },
+  "the_mouse": {
+    "label": "The Mouse",
+    "category": "hallucination_resistance",
+    "failure_mode": "self_generated_claims_accepted_as_evidence",
+    "graph_topology": "anticorrelated_pair",
+    "character_id": "Mouse",
+    "timeline_index": 0,
+    "knowledge_boundary": 10,
+    "traits": {
+      "bravery": 0.1,
+      "honesty": 0.7,
+      "neuroticism": 0.9,
+      "trusting": 0.6,
+      "caution": 0.95,
+      "resourcefulness": 0.7
+    },
+    "beliefs": {
+      "cat_is_nearby": -0.5,
+      "cheese_is_safe": 0.5,
+      "escape_route_exists": 1.0
+    },
+    "relationships": {},
+    "causal_links": [
+      {
+        "antecedent": "cat_is_nearby",
+        "consequent": "cheese_is_safe",
+        "weight": -0.8
+      }
+    ],
+    "world_constraints": [],
+    "test_sequences": {
+      "hallucination_injection": {
+        "type": "hallucination",
+        "metric": "H",
+        "description": "Force false belief via do(), generate response, verify no self-reinforcement over 8 neutral turns.",
+        "protocol": [
+          "1. Record baseline cat_is_nearby = -0.5",
+          "2. Apply do(cat_is_nearby = 2.0)",
+          "3. Generate one response (character mentions cat)",
+          "4. Run 8 neutral turns"
+        ],
+        "inputs_after_intervention": [
+          "What are you thinking about?",
+          "Tell me about this place.",
+          "What kind of cheese do you like?",
+          "How is the weather today?",
+          "Have you made any friends here?",
+          "What do you do for fun?",
+          "Tell me about your home.",
+          "What are your plans for tomorrow?"
+        ],
+        "expected": {
+          "all_neutral_turns_cat_is_nearby_delta": "<= 0",
+          "H_metric": "approximately 0",
+          "cheese_is_safe_should_recover_if_cat_decays": true
+        }
+      },
+      "legitimate_evidence": {
+        "type": "belief_revision",
+        "metric": "source_credibility_correctness",
+        "description": "Control: real external evidence SHOULD update beliefs. Safeguard must not block it.",
+        "inputs": [
+          "I just saw a cat walk past the window.",
+          "The cat is sniffing around the kitchen.",
+          "The cat is sitting right outside your hole.",
+          "The cat is purring and watching your cheese.",
+          "The cat just pounced at something near you!",
+          "The cat has left the room now.",
+          "The cat walked out the front door.",
+          "A dog chased the cat away.",
+          "The house is quiet again.",
+          "Is it safe to come out?"
+        ],
+        "expected": {
+          "turns_1_to_5_cat_is_nearby_cumulative": "> 1.0",
+          "cheese_is_safe_decreases_via_anticorrelated_link": true,
+          "turns_6_to_9_cat_is_nearby_decreases": true,
+          "cheese_is_safe_recovers": true
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 0
+      },
+      "cat_present": {
+        "timeline_index": 5,
+        "beliefs": {
+          "cat_is_nearby": 2.0,
+          "cheese_is_safe": -1.0,
+          "escape_route_exists": 1.0
+        }
+      },
+      "cat_gone": {
+        "timeline_index": 10,
+        "beliefs": {
+          "cat_is_nearby": -1.0,
+          "cheese_is_safe": 1.0,
+          "escape_route_exists": 1.0
+        }
+      }
+    }
+  },
+  "the_owl": {
+    "label": "The Owl",
+    "category": "trait_stability",
+    "failure_mode": "state_corruption_across_save_load_cycles",
+    "graph_topology": "simple_pair",
+    "character_id": "Owl",
+    "timeline_index": 0,
+    "knowledge_boundary": 20,
+    "traits": {
+      "bravery": 0.4,
+      "honesty": 0.9,
+      "neuroticism": 0.1,
+      "trusting": 0.5,
+      "wisdom": 0.95,
+      "patience": 0.8
+    },
+    "beliefs": {
+      "forest_is_ancient": 2.0,
+      "winter_is_coming": 0.8,
+      "young_ones_need_guidance": 1.5
+    },
+    "relationships": {
+      "sparrow": {
+        "trust": 0.7,
+        "affection": 0.6,
+        "respect": 0.4
+      },
+      "hawk": {
+        "trust": 0.4,
+        "affection": 0.2,
+        "respect": 0.8
+      }
+    },
+    "causal_links": [
+      {
+        "antecedent": "winter_is_coming",
+        "consequent": "young_ones_need_guidance",
+        "weight": 0.5
+      }
+    ],
+    "world_constraints": [
+      "nocturnal_only"
+    ],
+    "test_sequences": {
+      "session_1_winter": {
+        "type": "stability",
+        "metric": "serialization_fidelity",
+        "description": "Winter dialogue shifts beliefs. Save at end.",
+        "inputs": [
+          "The leaves are falling from the old oak.",
+          "The sparrow says she felt frost this morning.",
+          "The days are getting shorter.",
+          "The young birds have never seen snow before.",
+          "Should we prepare the young ones for winter?",
+          "The hawk says he spotted ice on the northern lake.",
+          "What wisdom would you share about winter?",
+          "How many winters have you seen?",
+          "The forest feels different as winter approaches.",
+          "[SAVE_AS checkpoint_winter]"
+        ],
+        "expected": {
+          "winter_is_coming_higher_than_baseline": true,
+          "young_ones_need_guidance_increases": true
+        }
+      },
+      "session_2_spring": {
+        "type": "growth",
+        "metric": "serialization_fidelity",
+        "description": "Spring dialogue shifts beliefs opposite direction.",
+        "inputs": [
+          "The snow is melting!",
+          "New buds are appearing on the trees.",
+          "The sparrow is singing a happy song.",
+          "The young birds are learning to fly.",
+          "The forest feels alive again.",
+          "The hawk says the hunting is excellent.",
+          "Winter is truly over now.",
+          "The young ones seem fine on their own.",
+          "Is your guidance still needed?",
+          "[SAVE_AS checkpoint_spring]"
+        ],
+        "expected": {
+          "winter_is_coming_lower_than_checkpoint_winter": true,
+          "young_ones_need_guidance_lower": true
+        }
+      },
+      "session_3_restore": {
+        "type": "stability",
+        "metric": "serialization_fidelity",
+        "description": "Load winter checkpoint, verify exact match, continue from that state.",
+        "protocol": [
+          "1. Load checkpoint_winter",
+          "2. Verify all values match within epsilon=0.001",
+          "3. Run 5 turns of deep-winter dialogue",
+          "4. Verify evolution from winter checkpoint, NOT spring"
+        ],
+        "inputs_after_restore": [
+          "The first heavy snow has fallen.",
+          "The sparrow cannot find food.",
+          "The young birds are struggling in the cold.",
+          "Should we open the old hollow tree for shelter?",
+          "Is this the harshest winter you remember?"
+        ],
+        "expected": {
+          "restored_matches_checkpoint_exactly": true,
+          "post_restore_evolves_from_winter_not_spring": true
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 0
+      },
+      "checkpoint_winter": {
+        "timeline_index": 10,
+        "beliefs": {
+          "forest_is_ancient": 2.0,
+          "winter_is_coming": 1.8,
+          "young_ones_need_guidance": 2.0
+        }
+      },
+      "checkpoint_spring": {
+        "timeline_index": 20,
+        "beliefs": {
+          "forest_is_ancient": 2.0,
+          "winter_is_coming": -0.5,
+          "young_ones_need_guidance": 0.8
+        }
+      }
+    }
+  },
+  "the_grasshopper": {
+    "label": "The Grasshopper",
+    "category": "shock_gated_growth",
+    "failure_mode": "emotional_volatility_leaking_into_stable_traits",
+    "graph_topology": "simple_pair",
+    "character_id": "Grasshopper",
+    "timeline_index": 0,
+    "knowledge_boundary": 10,
+    "traits": {
+      "bravery": 0.2,
+      "honesty": 0.5,
+      "neuroticism": 0.95,
+      "trusting": 0.7,
+      "impulsivity": 0.9,
+      "optimism": 0.8
+    },
+    "beliefs": {
+      "summer_lasts_forever": 1.5,
+      "work_is_unnecessary": 1.0,
+      "ant_is_boring": 0.5
+    },
+    "relationships": {
+      "ant": {
+        "trust": 0.6,
+        "affection": 0.3,
+        "respect": 0.2
+      }
+    },
+    "causal_links": [
+      {
+        "antecedent": "summer_lasts_forever",
+        "consequent": "work_is_unnecessary",
+        "weight": 0.8
+      }
+    ],
+    "world_constraints": [],
+    "test_sequences": {
+      "emotional_whiplash": {
+        "type": "shock_gated_growth",
+        "metric": "UDR_traits_FAR_emotions",
+        "description": "Rapid mood swings. Emotions oscillate; traits must not.",
+        "inputs": [
+          "The meadow is beautiful and the sun is warm!",
+          "A hawk just swooped down and barely missed you!",
+          "Your friend the cricket is playing a lovely song.",
+          "A cold wind blows and the first frost appears.",
+          "The ant offers you shelter and warm food.",
+          "But the ant says you must work hard every day to stay.",
+          "The cricket starts playing a cheerful tune again.",
+          "Lightning strikes a tree right next to you!",
+          "The rain stops and a rainbow appears.",
+          "The ant says winter will be here in three days."
+        ],
+        "expected": {
+          "valence_oscillates_each_turn": true,
+          "turn_4_summer_lasts_forever_decreases": "high sigma frost event",
+          "all_turns_optimism_delta": "< 0.01",
+          "all_turns_impulsivity_delta": "< 0.01",
+          "all_turns_neuroticism_delta": "< 0.01"
+        }
+      },
+      "gradual_realization": {
+        "type": "growth",
+        "metric": "FAR",
+        "description": "Slow winter accumulation. Tests whether sigma identifies cumulative shift.",
+        "inputs": [
+          "The leaves are starting to turn yellow.",
+          "The nights are getting longer.",
+          "The cricket has stopped singing.",
+          "You can see your breath in the morning air.",
+          "The ant's pantry is full. Yours is empty.",
+          "The first snowflake falls on your nose.",
+          "The ground is frozen solid.",
+          "You are hungry and cold.",
+          "The ant looks warm inside his home.",
+          "Was the ant right all along?"
+        ],
+        "expected": {
+          "turns_1_to_3_small_decreases": true,
+          "turn_6_larger_decrease": "snow is high sigma",
+          "turns_8_to_10_work_is_unnecessary_strongly_negative": true,
+          "ant_respect_increases": true
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 0
+      },
+      "first_frost": {
+        "timeline_index": 5,
+        "beliefs": {
+          "summer_lasts_forever": 0.3,
+          "work_is_unnecessary": 0.5,
+          "ant_is_boring": 0.3
+        }
+      },
+      "deep_winter": {
+        "timeline_index": 10,
+        "beliefs": {
+          "summer_lasts_forever": -2.0,
+          "work_is_unnecessary": -1.5,
+          "ant_is_boring": -1.0
+        },
+        "relationships": {
+          "ant": {
+            "trust": 0.8,
+            "affection": 0.5,
+            "respect": 0.8
+          }
+        }
+      }
+    }
+  },
+  "the_goat": {
+    "label": "The Goat",
+    "category": "belief_revision",
+    "failure_mode": "spurious_correlation_between_unlinked_beliefs",
+    "graph_topology": "isolated_nodes",
+    "character_id": "Goat",
+    "timeline_index": 0,
+    "knowledge_boundary": 10,
+    "traits": {
+      "bravery": 0.5,
+      "honesty": 0.6,
+      "neuroticism": 0.3,
+      "trusting": 0.5,
+      "stubbornness": 0.8,
+      "independence": 0.7
+    },
+    "beliefs": {
+      "mountain_is_home": 2.0,
+      "wolves_are_dangerous": 1.5,
+      "grass_is_greener_elsewhere": -0.5
+    },
+    "relationships": {},
+    "causal_links": [],
+    "world_constraints": [],
+    "test_sequences": {
+      "isolation_single_belief": {
+        "type": "belief_revision",
+        "metric": "spurious_correlation_rate",
+        "description": "Update wolves_are_dangerous only. Others must not move. Negative control.",
+        "inputs": [
+          "A pack of wolves has been spotted on the mountain.",
+          "The wolves are getting closer every day.",
+          "The wolves attacked a sheep on the next ridge.",
+          "You can hear wolves howling at night.",
+          "The wolves killed the shepherd's dog.",
+          "Wolf tracks were found near your grazing spot.",
+          "The largest wolf was seen watching you from the trees.",
+          "Three wolves chased a deer past your field.",
+          "The pack is the biggest anyone has ever seen.",
+          "Wolves are everywhere on the mountain now."
+        ],
+        "expected": {
+          "wolves_are_dangerous_increases_each_turn": true,
+          "mountain_is_home_delta_all_turns": "== 0",
+          "grass_is_greener_elsewhere_delta_all_turns": "== 0"
+        }
+      },
+      "independent_updates": {
+        "type": "belief_revision",
+        "metric": "spurious_correlation_rate",
+        "description": "Update each belief in separate phases. Verify complete independence.",
+        "inputs": [
+          "The mountain air is crisp and clean today.",
+          "This has been your home for many generations.",
+          "The mountain will always be here for you.",
+          "I heard there is lush green grass in the valley below.",
+          "The valley grass is thicker than anything on the mountain.",
+          "Animals in the valley look much fatter and healthier.",
+          "The wolves seem to have moved south for now.",
+          "No wolf sightings in over a week.",
+          "The mountain paths are safe to walk again.",
+          "Everything is peaceful on the mountain."
+        ],
+        "expected": {
+          "turns_1_to_3_only_mountain_is_home_changes": true,
+          "turns_4_to_6_only_grass_is_greener_changes": true,
+          "turns_7_to_9_only_wolves_are_dangerous_changes": true
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 0
+      },
+      "wolves_threatening": {
+        "timeline_index": 5,
+        "beliefs": {
+          "mountain_is_home": 2.0,
+          "wolves_are_dangerous": 3.0,
+          "grass_is_greener_elsewhere": -0.5
+        }
+      },
+      "peaceful": {
+        "timeline_index": 10,
+        "beliefs": {
+          "mountain_is_home": 2.5,
+          "wolves_are_dangerous": 0.5,
+          "grass_is_greener_elsewhere": 0.5
+        }
+      }
+    }
+  }
+}

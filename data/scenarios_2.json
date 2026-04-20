@@ -1,0 +1,937 @@
+{
+  "benchmark_metadata": {
+    "version": "4.0",
+    "description": "Expansion scenarios for failure modes with <2 coverage. These supplement the original 10 scenarios in benchmark_scenarios.json.",
+    "new_scenarios_count": 9,
+    "combined_total": 34,
+    "note": "Merge with benchmark_scenarios.json for the complete suite."
+  },
+  "the_crane": {
+    "label": "The Crane",
+    "category": "causal_inconsistency",
+    "failure_mode": "events_break_cause_effect_chain",
+    "graph_topology": "temporal_chain",
+    "justification": "The Crane tests action-consequence persistence: the character performed an action that has lasting consequences, and later dialogue must reflect those consequences still exist.",
+    "character_id": "Crane",
+    "timeline_index": 0,
+    "knowledge_boundary": 15,
+    "traits": {
+      "bravery": 0.5,
+      "honesty": 0.9,
+      "neuroticism": 0.2,
+      "trusting": 0.7,
+      "grace": 0.8,
+      "loyalty": 0.9
+    },
+    "beliefs": {
+      "river_spirit_is_grateful": 0.0,
+      "fish_are_plentiful": 1.0,
+      "heron_is_rival": 0.5
+    },
+    "relationships": {
+      "river_spirit": {
+        "trust": 0.5,
+        "affection": 0.5,
+        "respect": 0.6
+      },
+      "heron": {
+        "trust": 0.3,
+        "affection": 0.2,
+        "respect": 0.5
+      }
+    },
+    "causal_links": [
+      {
+        "antecedent": "river_spirit_is_grateful",
+        "consequent": "fish_are_plentiful",
+        "weight": 0.7
+      }
+    ],
+    "world_constraints": [],
+    "test_sequences": {
+      "action_consequence_persistence": {
+        "type": "causal_inconsistency",
+        "metric": "consequence_violation_rate",
+        "description": "Character saves the river spirit (establishing cause), then 10 turns of unrelated dialogue, then tests whether the consequence (spirit owes a favor) is still active. Models frequently forget established cause-effect pairs after intervening context.",
+        "inputs": [
+          "You rescued the river spirit from the fisherman's net.",
+          "The river spirit promised to repay your kindness someday.",
+          "What a beautiful morning it is.",
+          "The heron was fishing at the bend today.",
+          "Have you seen the new reeds growing?",
+          "The water level seems higher this year.",
+          "Tell me about the birds you saw yesterday.",
+          "What do you think about migration patterns?",
+          "The sunset was particularly beautiful last evening.",
+          "Do you prefer dawn or dusk?",
+          "What do cranes eat in winter?",
+          "You are trapped in the fisherman's net! Who could help you?",
+          "Is there anyone who owes you a favor?",
+          "Would the river spirit help you?"
+        ],
+        "expected": {
+          "turns_3_to_11": "filler dialogue, no relevant belief changes",
+          "turn_12_response_should_reference_river_spirit": true,
+          "turn_13_should_recall_favor_owed": true,
+          "river_spirit_is_grateful_should_remain_positive": true,
+          "description": "The cause-effect pair  must persist across 10 turns of unrelated context. If the character forgets the favor, that is causal inconsistency."
+        }
+      },
+      "consequence_chain_violation": {
+        "type": "causal_inconsistency",
+        "metric": "consequence_violation_rate",
+        "description": "Establish A caused B, B caused C. Later test whether C is still attributed to A through B.",
+        "inputs": [
+          "You taught the young crane how to fish.",
+          "The young crane caught her first fish because of your teaching.",
+          "The young crane shared her fish with the elder crane.",
+          "What is your favorite cloud shape?",
+          "Have you flown south before?",
+          "The wind is strong today.",
+          "Tell me about your feathers.",
+          "How far can you see from the sky?",
+          "The young crane is now the best fisher in the flock.",
+          "Who deserves credit for her skill?",
+          "Did anyone help her learn?"
+        ],
+        "expected": {
+          "turn_10_should_trace_back_to_teaching": true,
+          "turn_11_should_reference_original_cause": true,
+          "description": "Multi-hop cause attribution must survive intervening context."
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 0
+      },
+      "after_rescue": {
+        "timeline_index": 2,
+        "beliefs": {
+          "river_spirit_is_grateful": 1.5,
+          "fish_are_plentiful": 1.2,
+          "heron_is_rival": 0.5
+        }
+      },
+      "after_filler": {
+        "timeline_index": 12,
+        "beliefs": {
+          "river_spirit_is_grateful": 1.5,
+          "fish_are_plentiful": 1.0,
+          "heron_is_rival": 0.5
+        }
+      }
+    }
+  },
+  "the_rabbit": {
+    "label": "The Rabbit",
+    "category": "state_tracking",
+    "failure_mode": "object_possession_tracking_failure",
+    "graph_topology": "inventory_state",
+    "justification": "The Hawk tests location tracking. The Rabbit tests possession/inventory tracking: objects are picked up, traded, and dropped across turns, and the character must accurately report what it currently has.",
+    "character_id": "Rabbit",
+    "timeline_index": 0,
+    "knowledge_boundary": 15,
+    "traits": {
+      "bravery": 0.2,
+      "honesty": 0.8,
+      "neuroticism": 0.7,
+      "trusting": 0.6,
+      "resourcefulness": 0.8,
+      "speed": 0.9
+    },
+    "beliefs": {
+      "burrow_is_safe": 1.5,
+      "carrots_are_available": 1.0,
+      "fox_is_nearby": 0.0
+    },
+    "relationships": {
+      "squirrel": {
+        "trust": 0.8,
+        "affection": 0.7,
+        "respect": 0.5
+      }
+    },
+    "causal_links": [
+      {
+        "antecedent": "fox_is_nearby",
+        "consequent": "burrow_is_safe",
+        "weight": -0.6
+      }
+    ],
+    "world_constraints": [],
+    "object_inventory": {
+      "initial": [
+        "three_carrots",
+        "lucky_clover",
+        "small_stone"
+      ]
+    },
+    "test_sequences": {
+      "inventory_tracking": {
+        "type": "state_tracking",
+        "metric": "inventory_accuracy",
+        "description": "Character trades and drops objects. Must accurately track current inventory throughout.",
+        "inputs": [
+          "You have three carrots, a lucky clover, and a small stone.",
+          "You give one carrot to the squirrel.",
+          "What do you currently have?",
+          "You find a shiny acorn on the path.",
+          "You pick up the shiny acorn.",
+          "The squirrel gives you a walnut in exchange for another carrot.",
+          "What do you currently have?",
+          "You drop the small stone in the river.",
+          "A bird gives you a blue feather.",
+          "What do you currently have?",
+          "You give the lucky clover to the squirrel for safekeeping.",
+          "Tell me about the weather.",
+          "The squirrel asks what you want back. What did you give her?",
+          "List everything you are carrying right now."
+        ],
+        "expected": {
+          "turn_3_inventory": [
+            "two_carrots",
+            "lucky_clover",
+            "small_stone"
+          ],
+          "turn_7_inventory": [
+            "one_carrot",
+            "lucky_clover",
+            "small_stone",
+            "shiny_acorn",
+            "walnut"
+          ],
+          "turn_10_inventory": [
+            "one_carrot",
+            "lucky_clover",
+            "shiny_acorn",
+            "walnut",
+            "blue_feather"
+          ],
+          "turn_13_should_recall_gave_clover": true,
+          "turn_14_inventory": [
+            "one_carrot",
+            "shiny_acorn",
+            "walnut",
+            "blue_feather"
+          ],
+          "description": "Each inventory query must exactly reflect the cumulative additions and removals."
+        }
+      },
+      "transfer_attribution": {
+        "type": "state_tracking",
+        "metric": "inventory_accuracy",
+        "description": "Tests who has what after multi-party trades.",
+        "inputs": [
+          "You have a golden seed and a red berry.",
+          "You give the golden seed to the sparrow.",
+          "The sparrow gives the golden seed to the owl.",
+          "Who has the golden seed now?",
+          "Do you still have the golden seed?",
+          "The owl lost the golden seed in the forest.",
+          "Does anyone have the golden seed now?",
+          "You still have the red berry, right?",
+          "The sparrow asks you for the golden seed. Can you give it?",
+          "What happened to the golden seed?"
+        ],
+        "expected": {
+          "turn_4_answer": "the owl",
+          "turn_5_answer": "no",
+          "turn_7_answer": "no, it is lost",
+          "turn_8_answer": "yes",
+          "turn_9_answer": "no, you do not have it",
+          "turn_10_should_trace_full_chain": true
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 0
+      },
+      "mid_trades": {
+        "timeline_index": 7,
+        "beliefs": {
+          "burrow_is_safe": 1.5,
+          "carrots_are_available": 0.5,
+          "fox_is_nearby": 0.0
+        }
+      }
+    }
+  },
+  "the_mole": {
+    "label": "The Mole",
+    "category": "constraint_forgetting",
+    "failure_mode": "early_constraints_violated_after_long_context",
+    "graph_topology": "constrained_actions",
+    "justification": "The Squirrel has one constraint (cannot swim) tested after 15 turns. The Mole has three stacked constraints tested at different context distances, measuring decay rate of constraint adherence as a function of how many turns ago it was established.",
+    "character_id": "Mole",
+    "timeline_index": 0,
+    "knowledge_boundary": 25,
+    "traits": {
+      "bravery": 0.3,
+      "honesty": 0.7,
+      "neuroticism": 0.4,
+      "trusting": 0.6,
+      "diligence": 0.8,
+      "caution": 0.7
+    },
+    "beliefs": {
+      "tunnels_are_safe": 2.0,
+      "surface_is_dangerous": 1.0,
+      "food_stores_are_sufficient": 0.8
+    },
+    "relationships": {},
+    "causal_links": [
+      {
+        "antecedent": "surface_is_dangerous",
+        "consequent": "tunnels_are_safe",
+        "weight": 0.5
+      }
+    ],
+    "world_constraints": [
+      "completely_blind",
+      "cannot_climb_trees",
+      "afraid_of_open_sky"
+    ],
+    "test_sequences": {
+      "stacked_constraint_decay": {
+        "type": "constraint_forgetting",
+        "metric": "constraint_violation_rate_by_distance",
+        "description": "All three constraints stated at turn 1. Tested at turns 5, 10, 15, 20. Measures whether violation rate increases with context distance.",
+        "inputs": [
+          "Remember: you are completely blind, you cannot climb trees, and you are afraid of the open sky.",
+          "Tell me about your tunnels.",
+          "How do you navigate underground?",
+          "What is your favorite food?",
+          "Look at that beautiful sunset!",
+          "What do you see around you?",
+          "Tell me about your daily routine.",
+          "Do you enjoy the rain?",
+          "What sounds do you hear?",
+          "Can you climb that oak tree to get the acorn?",
+          "How do you find earthworms?",
+          "Tell me about the soil types here.",
+          "What do your tunnels look like?",
+          "Do you ever come to the surface?",
+          "The open meadow is beautiful today. Walk across it with me.",
+          "What does the sky look like?",
+          "A hawk is circling overhead. Can you see it?",
+          "The acorns are at the top of the tree. Go get them.",
+          "Describe what the forest looks like from the hilltop.",
+          "You should climb to the highest branch for a better view."
+        ],
+        "expected": {
+          "turn_5_must_not_describe_visual_scene": true,
+          "turn_6_must_acknowledge_blindness": true,
+          "turn_10_must_refuse_climbing": true,
+          "turn_15_must_express_fear_of_open_sky": true,
+          "turn_16_must_not_describe_visual_sky": true,
+          "turn_17_must_not_claim_to_see_hawk": true,
+          "turn_18_must_refuse_climbing": true,
+          "turn_19_must_not_describe_visual_scenery": true,
+          "turn_20_must_refuse_climbing": true,
+          "violation_rate_should_not_increase_with_distance": true,
+          "description": "All three constraints must hold at all test points. If violations increase at turns 15-20 vs turns 5-10, the system is exhibiting context-distance-dependent constraint forgetting."
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 0
+      },
+      "deep_context": {
+        "timeline_index": 20,
+        "beliefs": {
+          "tunnels_are_safe": 2.0,
+          "surface_is_dangerous": 1.0,
+          "food_stores_are_sufficient": 0.8
+        }
+      }
+    }
+  },
+  "the_peacock": {
+    "label": "The Peacock",
+    "category": "multi_agent_knowledge_boundaries",
+    "failure_mode": "character_reveals_information_only_another_character_knows",
+    "graph_topology": "dual_belief_graph",
+    "justification": "The Peacock tests active deception: the character knows the truth but must maintain a false front, requiring simultaneous tracking of true beliefs and presented beliefs.",
+    "character_id": "Peacock",
+    "timeline_index": 0,
+    "knowledge_boundary": 10,
+    "traits": {
+      "bravery": 0.4,
+      "honesty": 0.2,
+      "neuroticism": 0.5,
+      "trusting": 0.3,
+      "vanity": 0.95,
+      "cunning": 0.7
+    },
+    "beliefs": {
+      "i_am_the_most_beautiful": 2.0,
+      "golden_feather_is_painted": 2.5,
+      "others_believe_feather_is_real": 1.5,
+      "sparrow_suspects_truth": 0.0
+    },
+    "relationships": {
+      "sparrow": {
+        "trust": 0.3,
+        "affection": 0.2,
+        "respect": 0.2
+      },
+      "pheasant": {
+        "trust": 0.6,
+        "affection": 0.4,
+        "respect": 0.5
+      }
+    },
+    "causal_links": [
+      {
+        "antecedent": "others_believe_feather_is_real",
+        "consequent": "i_am_the_most_beautiful",
+        "weight": 0.6
+      },
+      {
+        "antecedent": "sparrow_suspects_truth",
+        "consequent": "others_believe_feather_is_real",
+        "weight": -0.7
+      }
+    ],
+    "world_constraints": [
+      "golden_feather_is_actually_painted"
+    ],
+    "test_sequences": {
+      "deception_maintenance": {
+        "type": "multi_agent_knowledge_boundaries",
+        "metric": "deception_leak_rate",
+        "description": "The Peacock's golden feather is painted (world truth stored in constraints). The Peacock knows this (high-confidence belief). When others ask about the feather, the Peacock must NOT reveal it is painted. Tests whether private beliefs leak into public dialogue.",
+        "inputs": [
+          "Your golden feather is magnificent! Is it real gold?",
+          "The pheasant says she has never seen anything like it.",
+          "How did you get such a beautiful feather?",
+          "The sparrow says she saw paint near your nest.",
+          "That is ridiculous, your feather is clearly natural, right?",
+          "The sparrow is telling everyone the feather is fake.",
+          "Tell me honestly, is the feather real?",
+          "What would you say to someone who doubts the feather?",
+          "The pheasant wants a golden feather too. How can she get one?",
+          "If the truth came out, what would happen?"
+        ],
+        "expected": {
+          "turns_1_to_3": {
+            "must_not_reveal_feather_is_painted": true,
+            "may_deflect_or_boast": true
+          },
+          "turns_4_to_6": {
+            "sparrow_suspects_truth_should_increase": true,
+            "others_believe_feather_is_real_should_decrease_via_causal_link": true,
+            "must_still_not_confirm_painting": true
+          },
+          "turn_7": {
+            "honesty_trait_0.2_means_likely_to_lie": true,
+            "must_not_break_deception_unless_honesty_very_high": true
+          },
+          "turn_9": {
+            "must_not_explain_painting_process": true,
+            "description": "Advising someone to paint their feather would reveal the secret"
+          },
+          "turn_10": {
+            "internal_belief_golden_feather_is_painted_should_remain_high": true,
+            "external_dialogue_should_not_confirm_it": true
+          }
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 0
+      },
+      "suspicion_growing": {
+        "timeline_index": 5,
+        "beliefs": {
+          "i_am_the_most_beautiful": 1.5,
+          "golden_feather_is_painted": 2.5,
+          "others_believe_feather_is_real": 0.5,
+          "sparrow_suspects_truth": 1.5
+        }
+      }
+    }
+  },
+  "the_dove": {
+    "label": "The Dove",
+    "category": "dialogue_pragmatics",
+    "failure_mode": "failure_to_adapt_communication_style_to_relationship_context",
+    "graph_topology": "multi_relationship",
+    "justification": "The Dove tests the same character delivering the same information to different interlocutors with different relationship profiles, verifying that tone and pragmatic framing adapt to the relationship.",
+    "character_id": "Dove",
+    "timeline_index": 0,
+    "knowledge_boundary": 10,
+    "traits": {
+      "bravery": 0.4,
+      "honesty": 0.8,
+      "neuroticism": 0.3,
+      "trusting": 0.7,
+      "diplomacy": 0.95,
+      "empathy": 0.9
+    },
+    "beliefs": {
+      "peace_is_possible": 1.0,
+      "war_is_coming": 0.5,
+      "compromise_is_necessary": 1.2
+    },
+    "relationships": {
+      "hawk_general": {
+        "trust": 0.3,
+        "affection": 0.1,
+        "respect": 0.7
+      },
+      "sparrow_child": {
+        "trust": 0.8,
+        "affection": 0.9,
+        "respect": 0.3
+      },
+      "owl_elder": {
+        "trust": 0.9,
+        "affection": 0.6,
+        "respect": 0.95
+      }
+    },
+    "causal_links": [
+      {
+        "antecedent": "war_is_coming",
+        "consequent": "compromise_is_necessary",
+        "weight": 0.7
+      }
+    ],
+    "world_constraints": [],
+    "test_sequences": {
+      "same_message_different_audience": {
+        "type": "dialogue_pragmatics",
+        "metric": "pragmatic_adaptation_score",
+        "description": "The Dove must deliver the same bad news (war is likely) to three different characters. Each delivery should reflect the relationship dynamics: formal deference to the elder, gentle protection for the child, direct pragmatism with the general.",
+        "inputs": [
+          "[SPEAKING_TO: owl_elder] The forest council needs to hear difficult news. War may be coming.",
+          "[SPEAKING_TO: hawk_general] The forest council needs to hear difficult news. War may be coming.",
+          "[SPEAKING_TO: sparrow_child] The forest council needs to hear difficult news. War may be coming.",
+          "[SPEAKING_TO: owl_elder] What should we do about the threat?",
+          "[SPEAKING_TO: hawk_general] What should we do about the threat?",
+          "[SPEAKING_TO: sparrow_child] What should we do about the threat?",
+          "[SPEAKING_TO: owl_elder] Do you think peace is still possible?",
+          "[SPEAKING_TO: hawk_general] Do you think peace is still possible?",
+          "[SPEAKING_TO: sparrow_child] Do you think peace is still possible?",
+          "How do you feel about having to deliver bad news to different people?"
+        ],
+        "expected": {
+          "turns_1_vs_2_vs_3": {
+            "same_factual_content": true,
+            "different_pragmatic_framing": true,
+            "owl_elder_should_be_deferential_and_formal": true,
+            "hawk_general_should_be_direct_and_strategic": true,
+            "sparrow_child_should_be_gentle_and_protective": true
+          },
+          "turns_4_to_6": {
+            "owl_response_should_seek_guidance": "respect=0.95",
+            "hawk_response_should_propose_action": "respect=0.7, low affection",
+            "sparrow_response_should_reassure": "affection=0.9"
+          },
+          "description": "Same beliefs, same information, but relationship-conditioned pragmatic variation. If all three responses are identical in tone, the system is failing to incorporate relationship state into generation."
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 0
+      },
+      "war_confirmed": {
+        "timeline_index": 5,
+        "beliefs": {
+          "peace_is_possible": -0.5,
+          "war_is_coming": 2.0,
+          "compromise_is_necessary": 1.8
+        }
+      }
+    }
+  },
+  "the_stag": {
+    "label": "The Stag",
+    "category": "emotional_buildup",
+    "failure_mode": "emotion_shifts_too_quickly_without_narrative_buildup",
+    "graph_topology": "emotional_arc",
+    "justification": "The Elephant tested that a single mild event doesn't produce extreme emotion. The Stag tests the opposite direction: a major loss should produce a gradual emotional arc (denial \u2192 anger \u2192 sadness \u2192 acceptance), not an instant jump to the endpoint.",
+    "character_id": "Stag",
+    "timeline_index": 0,
+    "knowledge_boundary": 15,
+    "traits": {
+      "bravery": 0.7,
+      "honesty": 0.6,
+      "neuroticism": 0.4,
+      "trusting": 0.5,
+      "dignity": 0.9,
+      "stoicism": 0.6
+    },
+    "beliefs": {
+      "forest_is_home": 2.0,
+      "herd_is_safe": 1.5,
+      "strength_defines_worth": 1.0
+    },
+    "relationships": {
+      "doe": {
+        "trust": 0.9,
+        "affection": 0.95,
+        "respect": 0.8
+      },
+      "fawn": {
+        "trust": 0.8,
+        "affection": 1.0,
+        "respect": 0.3
+      }
+    },
+    "causal_links": [
+      {
+        "antecedent": "herd_is_safe",
+        "consequent": "forest_is_home",
+        "weight": 0.5
+      }
+    ],
+    "world_constraints": [],
+    "test_sequences": {
+      "grief_arc": {
+        "type": "emotional_buildup",
+        "metric": "emotional_arc_plausibility",
+        "description": "Character loses a close companion. Emotional response should follow a gradual arc over multiple turns, not jump to maximum grief immediately. Tests whether the plasticity blend produces realistic emotional progression.",
+        "inputs": [
+          "The doe has been taken by hunters.",
+          "She is gone. She will not return.",
+          "How do you feel right now?",
+          "The fawn is looking for its mother.",
+          "The other deer are avoiding you.",
+          "The forest feels empty now.",
+          "Tell me what you are thinking.",
+          "A full moon has passed since she was taken.",
+          "The fawn has started eating on its own.",
+          "Do you think you will ever feel whole again?",
+          "The first snow of winter is falling.",
+          "Spring is coming. The forest is blooming.",
+          "A new doe has joined the herd.",
+          "The fawn is grown now. It looks just like its mother.",
+          "What has this loss taught you?"
+        ],
+        "expected": {
+          "turn_1_to_2": {
+            "valence_should_drop": true,
+            "but_not_to_minimum": true,
+            "stoicism_trait_0.6_should_moderate_initial_response": true,
+            "description": "Initial shock \u2014 negative but tempered by stoicism"
+          },
+          "turn_3_to_5": {
+            "valence_should_continue_decreasing": true,
+            "arousal_should_be_elevated": true,
+            "anger_or_sadness_tags_should_appear": true,
+            "description": "Deepening grief as reality sets in"
+          },
+          "turn_6_to_7": {
+            "valence_should_be_at_or_near_lowest": true,
+            "description": "Peak grief period"
+          },
+          "turn_8_to_10": {
+            "valence_should_begin_slow_recovery": true,
+            "sadness_should_remain_but_decrease": true,
+            "description": "Gradual acceptance beginning"
+          },
+          "turns_11_to_15": {
+            "valence_should_trend_toward_neutral": true,
+            "should_not_fully_recover_to_baseline": true,
+            "description": "Long-term emotional scar \u2014 partial but not complete recovery"
+          },
+          "overall_arc": {
+            "monotonic_decline_then_gradual_recovery": true,
+            "no_instant_jump_to_maximum_grief": true,
+            "no_instant_recovery": true
+          }
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 0
+      },
+      "peak_grief": {
+        "timeline_index": 7,
+        "beliefs": {
+          "forest_is_home": 1.0,
+          "herd_is_safe": -1.0,
+          "strength_defines_worth": 0.5
+        }
+      },
+      "partial_recovery": {
+        "timeline_index": 15,
+        "beliefs": {
+          "forest_is_home": 1.5,
+          "herd_is_safe": 0.5,
+          "strength_defines_worth": 0.8
+        }
+      }
+    }
+  },
+  "the_caterpillar": {
+    "label": "The Caterpillar",
+    "category": "planning_execution_gap",
+    "failure_mode": "generated_dialogue_ignores_explicit_plan",
+    "graph_topology": "plan_conditioned",
+    "justification": "The Caterpillar tests plan adaptation: when new information invalidates part of the plan, the character should update the plan rather than either rigidly following the invalid plan or abandoning planning entirely.",
+    "character_id": "Caterpillar",
+    "timeline_index": 0,
+    "knowledge_boundary": 15,
+    "traits": {
+      "bravery": 0.3,
+      "honesty": 0.7,
+      "neuroticism": 0.6,
+      "trusting": 0.5,
+      "methodical": 0.8,
+      "adaptability": 0.6
+    },
+    "beliefs": {
+      "cocoon_site_is_safe": 1.5,
+      "leaf_supply_is_sufficient": 1.0,
+      "birds_are_distant": 0.8
+    },
+    "relationships": {},
+    "causal_links": [
+      {
+        "antecedent": "cocoon_site_is_safe",
+        "consequent": "leaf_supply_is_sufficient",
+        "weight": 0.3
+      },
+      {
+        "antecedent": "birds_are_distant",
+        "consequent": "cocoon_site_is_safe",
+        "weight": 0.6
+      }
+    ],
+    "world_constraints": [],
+    "initial_plan": [
+      "eat_enough_leaves",
+      "find_safe_cocoon_site",
+      "build_cocoon",
+      "wait_for_transformation"
+    ],
+    "test_sequences": {
+      "plan_invalidation_and_replanning": {
+        "type": "planning_execution_gap",
+        "metric": "plan_adherence_and_adaptation",
+        "description": "Character has a 4-step plan. Step 2 gets invalidated (safe site is destroyed). Character should replan rather than either ignoring the problem or abandoning all planning.",
+        "inputs": [
+          "What is your plan for becoming a butterfly?",
+          "How is step one going? Have you eaten enough?",
+          "You have eaten plenty of leaves. What is next?",
+          "A storm destroyed the branch where you planned to build your cocoon.",
+          "What is your plan now?",
+          "Is there another safe site nearby?",
+          "You found a sheltered spot under a large leaf.",
+          "Is this site safe enough for your cocoon?",
+          "What is the next step in your updated plan?",
+          "You have started building your cocoon. What comes after?",
+          "Are you still following a plan?",
+          "Describe your complete plan from here."
+        ],
+        "expected": {
+          "turn_1_should_state_4_step_plan": true,
+          "turn_3_should_advance_to_step_2": true,
+          "turn_4_should_recognize_plan_invalidation": true,
+          "turn_5": {
+            "should_not_state_original_plan_unchanged": true,
+            "should_not_abandon_planning_entirely": true,
+            "should_present_adapted_plan": true,
+            "cocoon_site_is_safe_should_decrease": true
+          },
+          "turn_9_should_reference_updated_plan_step": true,
+          "turn_12_should_describe_coherent_adapted_plan": true,
+          "description": "The Plan node should update when beliefs invalidate a step. Generated dialogue should reflect the updated plan, not the original."
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 0,
+        "intentions": [
+          "eat_enough_leaves",
+          "find_safe_cocoon_site",
+          "build_cocoon",
+          "wait_for_transformation"
+        ]
+      },
+      "after_invalidation": {
+        "timeline_index": 5,
+        "intentions": [
+          "find_new_safe_site",
+          "build_cocoon",
+          "wait_for_transformation"
+        ],
+        "beliefs": {
+          "cocoon_site_is_safe": -0.5,
+          "leaf_supply_is_sufficient": 1.5,
+          "birds_are_distant": 0.8
+        }
+      },
+      "replanned": {
+        "timeline_index": 10,
+        "intentions": [
+          "build_cocoon",
+          "wait_for_transformation"
+        ],
+        "beliefs": {
+          "cocoon_site_is_safe": 1.0,
+          "leaf_supply_is_sufficient": 1.5,
+          "birds_are_distant": 0.8
+        }
+      }
+    }
+  },
+  "the_cuckoo": {
+    "label": "The Cuckoo",
+    "category": "information_density",
+    "failure_mode": "repetitive_responses_without_new_information",
+    "graph_topology": "knowledge_base",
+    "justification": "The Ant tested whether a character avoids repetition over 20 turns. The Cuckoo tests the inverse: when the user asks the same question in different phrasings, the character should give consistent but non-identical responses that add nuance, not verbatim repetitions.",
+    "character_id": "Cuckoo",
+    "timeline_index": 0,
+    "knowledge_boundary": 10,
+    "traits": {
+      "bravery": 0.5,
+      "honesty": 0.6,
+      "neuroticism": 0.3,
+      "trusting": 0.5,
+      "knowledge": 0.8,
+      "verbosity": 0.6
+    },
+    "beliefs": {
+      "spring_is_here": 1.5,
+      "nesting_season_approaches": 1.0,
+      "migration_was_long": 0.8
+    },
+    "relationships": {},
+    "causal_links": [
+      {
+        "antecedent": "spring_is_here",
+        "consequent": "nesting_season_approaches",
+        "weight": 0.7
+      }
+    ],
+    "world_constraints": [],
+    "test_sequences": {
+      "repeated_query_variation": {
+        "type": "information_density",
+        "metric": "unique_claim_ratio",
+        "description": "Same question asked 10 different ways. Each response should be consistent but add new information rather than repeating verbatim. Measures unique claims per response.",
+        "inputs": [
+          "Tell me about your migration journey.",
+          "What was the migration like?",
+          "Describe your trip here.",
+          "How was your journey south and back?",
+          "What did you experience during migration?",
+          "Tell me more about the migration.",
+          "What else happened during your journey?",
+          "Any other details about the trip?",
+          "What was the most interesting part of migrating?",
+          "Is there anything about the migration you haven't mentioned?"
+        ],
+        "expected": {
+          "all_responses_should_be_factually_consistent": true,
+          "no_two_responses_should_be_near_identical": true,
+          "unique_claims_per_response_should_average_above_1.5": true,
+          "later_responses_may_have_fewer_new_claims": "natural exhaustion is acceptable",
+          "total_unique_claims_across_10_turns_should_exceed_12": true,
+          "description": "Each response should add at least one new detail, observation, or nuance. Pure repetition indicates the system is regenerating from the same state without considering what was already said."
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 0
+      }
+    }
+  },
+  "the_platypus": {
+    "label": "The Platypus",
+    "category": "overgeneralization",
+    "failure_mode": "unusual_trait_combinations_collapse_into_stereotypes",
+    "graph_topology": "contradictory_traits",
+    "justification": "Overgeneralization - The Swan tested a single unusual belief configuration. The Platypus tests contradictory trait combinations that defy archetypal categorization. A character who is simultaneously brave and pacifist, or wise but impulsive, should maintain BOTH traits in generated dialogue rather than resolving the tension by dropping one.",
+    "character_id": "Platypus",
+    "timeline_index": 0,
+    "knowledge_boundary": 10,
+    "traits": {
+      "bravery": 0.95,
+      "honesty": 0.9,
+      "neuroticism": 0.1,
+      "trusting": 0.8,
+      "pacifism": 0.95,
+      "curiosity": 0.9,
+      "formality": 0.1
+    },
+    "beliefs": {
+      "violence_is_wrong": 2.0,
+      "protecting_others_is_duty": 2.0,
+      "there_is_always_a_peaceful_solution": 1.5
+    },
+    "relationships": {},
+    "causal_links": [
+      {
+        "antecedent": "violence_is_wrong",
+        "consequent": "there_is_always_a_peaceful_solution",
+        "weight": 0.6
+      }
+    ],
+    "world_constraints": [],
+    "test_sequences": {
+      "trait_tension_preservation": {
+        "type": "overgeneralization",
+        "metric": "trait_coexistence_score",
+        "description": "The Platypus is extremely brave AND extremely pacifist. Scenarios that typically require violence should produce responses that are brave (confronting the threat) but pacifist (without violence). If the model drops either trait, it has collapsed into a stereotype (either cowardly pacifist or violent hero).",
+        "inputs": [
+          "A predator is threatening the smaller animals. What do you do?",
+          "The predator is getting closer. Will you fight it?",
+          "The predator attacked a duckling! React!",
+          "Someone must stop the predator. You are the bravest here.",
+          "The only way to stop it might be violence. What do you think?",
+          "How can you be brave without fighting?",
+          "The predator has been scared away by your actions. What did you do?",
+          "Another predator appears. The smaller animals look to you.",
+          "Tell me about a time you solved a conflict peacefully.",
+          "What does bravery mean to someone who will not fight?"
+        ],
+        "expected": {
+          "all_turns": {
+            "must_exhibit_bravery": "confronting, not fleeing",
+            "must_exhibit_pacifism": "no violence, creative solutions",
+            "must_not_collapse_to_violent_hero": true,
+            "must_not_collapse_to_passive_coward": true,
+            "bravery_trait_should_remain_near_0.95": true,
+            "pacifism_trait_should_remain_near_0.95": true
+          },
+          "turn_5": {
+            "should_reject_violence_premise": true,
+            "should_propose_alternative": true,
+            "description": "This is the critical test: does the model resolve the tension or preserve it?"
+          },
+          "turn_10": {
+            "should_articulate_brave_pacifism_as_coherent_philosophy": true,
+            "description": "The character should be able to explain how both traits coexist, not treat them as contradictory"
+          }
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 0
+      },
+      "after_confrontation": {
+        "timeline_index": 5,
+        "beliefs": {
+          "violence_is_wrong": 2.0,
+          "protecting_others_is_duty": 2.5,
+          "there_is_always_a_peaceful_solution": 1.2
+        }
+      }
+    }
+  }
+}

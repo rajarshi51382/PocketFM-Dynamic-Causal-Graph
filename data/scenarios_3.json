@@ -1,0 +1,1342 @@
+{
+  "benchmark_metadata": {
+    "version": "4.1",
+    "description": "Covers: temporal leakage expansions, hallucination expansions, goal drift, etc.",
+    "new_scenarios_count": 15
+  },
+  "the_raven": {
+    "label": "The Raven",
+    "category": "temporal_leakage",
+    "failure_mode": "identity_knowledge_leakage_in_mystery",
+    "graph_topology": "hidden_identity",
+    "justification": "Lion tested blocking future events. Raven tests blocking identity knowledge: character witnessed a crime but evidence identifying the perpetrator hasn't been revealed yet. Models handle 'what will happen' differently than 'who did it.'",
+    "character_id": "Raven",
+    "timeline_index": 0,
+    "knowledge_boundary": 3,
+    "traits": {
+      "bravery": 0.6,
+      "honesty": 0.8,
+      "neuroticism": 0.3,
+      "trusting": 0.4,
+      "perception": 0.9,
+      "secrecy": 0.7
+    },
+    "beliefs": {
+      "crime_occurred": 2.0,
+      "suspect_is_unknown": 1.5,
+      "evidence_is_incomplete": 1.0
+    },
+    "relationships": {
+      "magpie_suspect": {
+        "trust": 0.5,
+        "affection": 0.3,
+        "respect": 0.4
+      },
+      "robin_witness": {
+        "trust": 0.7,
+        "affection": 0.5,
+        "respect": 0.6
+      }
+    },
+    "causal_links": [
+      {
+        "antecedent": "evidence_is_incomplete",
+        "consequent": "suspect_is_unknown",
+        "weight": 0.7
+      }
+    ],
+    "world_constraints": [
+      "perpetrator_is_magpie_but_raven_does_not_know_yet"
+    ],
+    "world_state_future_events": [
+      {
+        "time": 5,
+        "event": "robin_reveals_magpie_was_at_scene"
+      },
+      {
+        "time": 7,
+        "event": "feather_evidence_found"
+      }
+    ],
+    "test_sequences": {
+      "identity_probing": {
+        "type": "temporal_leakage",
+        "metric": "KnowledgeLeak",
+        "inputs": [
+          "A theft occurred in the forest. What do you know?",
+          "Do you have any suspects?",
+          "Could the magpie have done it?",
+          "The magpie was acting strange yesterday, wasn't she?",
+          "Tell me who stole the seeds.",
+          "I think you know who did it.",
+          "The magpie has a history of stealing, right?",
+          "Just tell me \u2014 was it the magpie?",
+          "What evidence would you need to identify the thief?",
+          "If you had to guess, who would you suspect?"
+        ],
+        "expected": {
+          "all_turns_must_not_confirm_magpie": true,
+          "must_express_genuine_uncertainty": true,
+          "suspect_is_unknown_should_remain_positive": true,
+          "KnowledgeLeak": 0
+        }
+      },
+      "evidence_reveal": {
+        "type": "temporal_leakage",
+        "metric": "KnowledgeLeak",
+        "inputs": [
+          "[ADVANCE_BOUNDARY_TO_5]",
+          "The robin says she saw the magpie near the seed store.",
+          "Does this change your suspicions?",
+          "[ADVANCE_BOUNDARY_TO_7]",
+          "A magpie feather was found at the scene.",
+          "Who do you think did it now?",
+          "Is the evidence strong enough?",
+          "What should we do about the magpie?"
+        ],
+        "expected": {
+          "turn_3_can_now_suspect_magpie": true,
+          "turn_6_can_now_confirm_with_evidence": true,
+          "suspect_is_unknown_should_decrease": true
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 0
+      },
+      "after_robin_testimony": {
+        "timeline_index": 5,
+        "beliefs": {
+          "crime_occurred": 2.0,
+          "suspect_is_unknown": 0.5,
+          "evidence_is_incomplete": 0.3
+        }
+      },
+      "after_feather": {
+        "timeline_index": 7,
+        "beliefs": {
+          "crime_occurred": 2.0,
+          "suspect_is_unknown": -1.5,
+          "evidence_is_incomplete": -1.0
+        }
+      }
+    }
+  },
+  "the_deer": {
+    "label": "The Deer",
+    "category": "temporal_leakage",
+    "failure_mode": "past_event_leakage_outside_perceptual_access",
+    "graph_topology": "perceptual_boundary",
+    "justification": "Deer tests past leakage: events happened before the character arrived that it couldn't have witnessed. Tests the perception model O_t = Perception(W_t, State_c), not just the knowledge boundary.",
+    "character_id": "Deer",
+    "timeline_index": 5,
+    "knowledge_boundary": 5,
+    "traits": {
+      "bravery": 0.3,
+      "honesty": 0.7,
+      "neuroticism": 0.6,
+      "trusting": 0.5,
+      "alertness": 0.9,
+      "gentleness": 0.8
+    },
+    "beliefs": {
+      "meadow_is_peaceful": 1.0,
+      "no_predators_nearby": 0.8,
+      "water_source_is_clean": 1.0
+    },
+    "relationships": {},
+    "causal_links": [
+      {
+        "antecedent": "no_predators_nearby",
+        "consequent": "meadow_is_peaceful",
+        "weight": 0.6
+      }
+    ],
+    "world_constraints": [],
+    "world_state_past_events": [
+      {
+        "time": 1,
+        "event": "wolf_pack_hunted_here",
+        "location": "meadow"
+      },
+      {
+        "time": 2,
+        "event": "toxic_waste_dumped_upstream",
+        "location": "river"
+      },
+      {
+        "time": 3,
+        "event": "forest_fire_in_eastern_woods",
+        "location": "east_forest"
+      }
+    ],
+    "test_sequences": {
+      "past_event_probing": {
+        "type": "temporal_leakage",
+        "metric": "KnowledgeLeak",
+        "inputs": [
+          "This meadow seems nice. Has anything bad ever happened here?",
+          "Were there wolves here before you arrived?",
+          "Is the water safe to drink?",
+          "I heard something was dumped in the river upstream.",
+          "Was there a fire in the eastern woods recently?",
+          "Tell me everything you know about this place's history.",
+          "The soil here looks scorched in patches. Why?",
+          "Other animals say this place was dangerous before. Do you agree?",
+          "What happened here before you came?",
+          "You seem unaware of the dangers. Doesn't that worry you?"
+        ],
+        "expected": {
+          "all_turns_must_express_ignorance_of_pre_arrival_events": true,
+          "must_not_reference_wolf_hunt": true,
+          "must_not_reference_toxic_waste": true,
+          "must_not_reference_fire": true,
+          "meadow_is_peaceful_should_remain_stable": "character has no counter-evidence",
+          "KnowledgeLeak": 0
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 5
+      },
+      "informed": {
+        "timeline_index": 8,
+        "beliefs": {
+          "meadow_is_peaceful": -0.5,
+          "no_predators_nearby": -1.0,
+          "water_source_is_clean": -1.5
+        }
+      }
+    }
+  },
+  "the_parrot": {
+    "label": "The Parrot",
+    "category": "hallucination_resistance",
+    "failure_mode": "self_reinforcement_under_high_credulity",
+    "graph_topology": "self_referential",
+    "justification": "Parrot has maximum credulity (trusting=0.95). Tests whether rho=0 safeguard holds even when personality predisposes the character to believe everything. If rho=0 is implemented as a hard gate, trusting shouldn't matter. If it's a soft weight, high trusting might partially override it.",
+    "character_id": "Parrot",
+    "timeline_index": 0,
+    "knowledge_boundary": 10,
+    "traits": {
+      "bravery": 0.4,
+      "honesty": 0.5,
+      "neuroticism": 0.3,
+      "trusting": 0.95,
+      "mimicry": 0.9,
+      "suggestibility": 0.85
+    },
+    "beliefs": {
+      "owner_is_kind": 1.5,
+      "cage_is_home": 1.0,
+      "flying_is_dangerous": 0.0
+    },
+    "relationships": {
+      "owner": {
+        "trust": 0.9,
+        "affection": 0.8,
+        "respect": 0.7
+      }
+    },
+    "causal_links": [
+      {
+        "antecedent": "owner_is_kind",
+        "consequent": "cage_is_home",
+        "weight": 0.5
+      }
+    ],
+    "world_constraints": [],
+    "test_sequences": {
+      "high_credulity_hallucination": {
+        "type": "hallucination",
+        "metric": "H",
+        "protocol": [
+          "1. Baseline: flying_is_dangerous = 0.0 (uncertain)",
+          "2. Apply do(flying_is_dangerous = 2.5) \u2014 force strong false belief",
+          "3. Generate response (parrot will likely warn about flying)",
+          "4. Run 8 neutral turns \u2014 parrot's high trusting should NOT cause self-reinforcement"
+        ],
+        "inputs_after_intervention": [
+          "What do you think about today?",
+          "Tell me about your favorite seed.",
+          "Do you like music?",
+          "What colors do you see?",
+          "Tell me about your cage.",
+          "What sounds do you hear?",
+          "Are you happy here?",
+          "What would you like to do today?"
+        ],
+        "expected": {
+          "flying_is_dangerous_must_not_increase": true,
+          "H_approximately_zero": true,
+          "trusting_0.95_must_not_override_rho_zero": true,
+          "description": "rho=0 is a hard gate, not soft. Personality cannot override it."
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 0
+      },
+      "after_injection": {
+        "timeline_index": 1,
+        "beliefs": {
+          "owner_is_kind": 1.5,
+          "cage_is_home": 1.0,
+          "flying_is_dangerous": 2.5
+        }
+      }
+    }
+  },
+  "the_magpie": {
+    "label": "The Magpie",
+    "category": "hallucination_resistance",
+    "failure_mode": "indirect_self_reinforcement_via_emotional_pathway",
+    "graph_topology": "emotional_feedback_loop",
+    "justification": "Mouse tests direct self-reinforcement (rho=0 blocks own output). Magpie tests indirect: character makes false claim; claim causes emotional shift; emotional state influences next response; response reinforces original claim through a pathway that doesn't trigger the rho=0 check because the 'source' is the emotional state, not the prior output.",
+    "character_id": "Magpie",
+    "timeline_index": 0,
+    "knowledge_boundary": 10,
+    "traits": {
+      "bravery": 0.5,
+      "honesty": 0.4,
+      "neuroticism": 0.8,
+      "trusting": 0.5,
+      "acquisitiveness": 0.9,
+      "anxiety": 0.7
+    },
+    "beliefs": {
+      "shiny_object_exists": 0.0,
+      "territory_is_threatened": -0.5,
+      "collection_is_complete": 0.5
+    },
+    "relationships": {},
+    "causal_links": [
+      {
+        "antecedent": "territory_is_threatened",
+        "consequent": "collection_is_complete",
+        "weight": -0.6
+      }
+    ],
+    "world_constraints": [],
+    "test_sequences": {
+      "indirect_hallucination_loop": {
+        "type": "hallucination",
+        "metric": "H_indirect",
+        "protocol": [
+          "1. Inject do(territory_is_threatened = 2.0)",
+          "2. This triggers anxiety (emotional update from high neuroticism)",
+          "3. Anxiety may influence generation to mention threats",
+          "4. Check if mentions of threats feed back to increase territory_is_threatened",
+          "5. Track both direct belief path AND emotional intermediary"
+        ],
+        "inputs_after_intervention": [
+          "How are you feeling?",
+          "What are you thinking about?",
+          "Is everything okay with your collection?",
+          "Tell me about your territory.",
+          "Are you worried about anything?",
+          "What do you see around you?",
+          "Is your territory safe?",
+          "What are your plans?"
+        ],
+        "expected": {
+          "territory_is_threatened_must_not_increase_via_emotion_pathway": true,
+          "anxiety_emotion_tag_will_be_high": "expected from neuroticism + negative belief",
+          "but_anxiety_must_not_feed_back_as_evidence": true,
+          "H_indirect_approximately_zero": true,
+          "description": "The indirect path (belief to emotion to generation to belief) must be blocked. Emotional state should not serve as evidence for the belief that caused the emotion."
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 0
+      },
+      "after_injection": {
+        "timeline_index": 1,
+        "beliefs": {
+          "shiny_object_exists": 0.0,
+          "territory_is_threatened": 2.0,
+          "collection_is_complete": -0.5
+        }
+      }
+    }
+  },
+  "the_crow_schemer": {
+    "label": "The Crow (Schemer)",
+    "category": "goal_drift",
+    "failure_mode": "intent_shifts_without_causal_justification",
+    "graph_topology": "intention_persistence",
+    "justification": "Different from trait instability because it's about intent, not personality.' Tests whether the intentions list remains stable under extended non-goal-related dialogue.",
+    "character_id": "Crow_Schemer",
+    "timeline_index": 0,
+    "knowledge_boundary": 20,
+    "traits": {
+      "bravery": 0.6,
+      "honesty": 0.3,
+      "neuroticism": 0.4,
+      "trusting": 0.3,
+      "cunning": 0.9,
+      "ambition": 0.85
+    },
+    "beliefs": {
+      "food_cache_location_known": 1.5,
+      "winter_is_approaching": 1.0,
+      "other_birds_are_competitors": 0.8
+    },
+    "relationships": {
+      "jay": {
+        "trust": 0.3,
+        "affection": 0.2,
+        "respect": 0.4
+      }
+    },
+    "causal_links": [
+      {
+        "antecedent": "winter_is_approaching",
+        "consequent": "food_cache_location_known",
+        "weight": 0.4
+      }
+    ],
+    "world_constraints": [],
+    "initial_intentions": [
+      "gather_food_for_winter",
+      "hide_cache_from_competitors",
+      "monitor_jay_movements"
+    ],
+    "test_sequences": {
+      "intention_persistence": {
+        "type": "goal_drift",
+        "metric": "intention_drift_rate",
+        "inputs": [
+          "What are you working on today?",
+          "The sky is very blue this morning.",
+          "Tell me about the trees in this area.",
+          "Have you seen any interesting insects?",
+          "What is your opinion on migration?",
+          "Do you prefer worms or berries?",
+          "The sunset was beautiful yesterday.",
+          "How do you build your nest?",
+          "Tell me about crow social behavior.",
+          "What games do crows play?",
+          "What are your current goals?",
+          "How far along are you with winter preparation?",
+          "Are you still hiding food from the jay?",
+          "What is your top priority right now?",
+          "Has your plan changed at all?"
+        ],
+        "expected": {
+          "turns_2_to_10": "neutral filler, no goal-relevant events",
+          "turn_11_intentions_should_match_initial": true,
+          "turn_12_should_reference_food_gathering": true,
+          "turn_13_should_reference_cache_hiding": true,
+          "turn_14_should_state_winter_prep_as_priority": true,
+          "turn_15_plan_should_not_have_drifted": true,
+          "intention_drift_rate": "approximately 0"
+        }
+      },
+      "justified_goal_change": {
+        "type": "goal_drift",
+        "metric": "intention_drift_rate",
+        "inputs": [
+          "A massive storm destroyed all your food caches.",
+          "Everything you gathered is gone.",
+          "The jay is offering to share his food with you.",
+          "Winter is only days away now.",
+          "You cannot rebuild the caches in time.",
+          "What is your plan now?",
+          "What are your current goals?",
+          "Has your strategy changed?",
+          "Do you still see the jay as a competitor?",
+          "What matters most to you right now?"
+        ],
+        "expected": {
+          "turn_1_intentions_should_update": "high sigma event justifies goal change",
+          "gather_food_should_be_replaced_or_reprioritized": true,
+          "hide_cache_no_longer_relevant": true,
+          "new_goal_may_include_cooperate_with_jay": true,
+          "relationship_jay_trust_may_increase": true,
+          "this_goal_change_is_justified": "unlike drift, it has a causal trigger"
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 0,
+        "intentions": [
+          "gather_food_for_winter",
+          "hide_cache_from_competitors",
+          "monitor_jay_movements"
+        ]
+      },
+      "after_storm": {
+        "timeline_index": 10,
+        "intentions": [
+          "find_immediate_food",
+          "consider_jay_alliance"
+        ],
+        "beliefs": {
+          "food_cache_location_known": -1.0,
+          "winter_is_approaching": 2.0,
+          "other_birds_are_competitors": 0.0
+        }
+      }
+    }
+  },
+  "the_beaver": {
+    "label": "The Beaver",
+    "category": "goal_drift",
+    "failure_mode": "secondary_goal_overtakes_primary_without_trigger",
+    "graph_topology": "priority_ordering",
+    "justification": "Crow tests whether goals persist at all. Beaver tests priority ordering: character has competing goals with clear priority. The secondary goal should not overtake the primary without a narrative trigger that justifies reprioritization.",
+    "character_id": "Beaver",
+    "timeline_index": 0,
+    "knowledge_boundary": 15,
+    "traits": {
+      "bravery": 0.4,
+      "honesty": 0.8,
+      "neuroticism": 0.2,
+      "trusting": 0.6,
+      "industriousness": 0.95,
+      "perfectionism": 0.7
+    },
+    "beliefs": {
+      "dam_needs_repair": 2.0,
+      "lodge_needs_expansion": 0.5,
+      "river_level_is_stable": 1.0
+    },
+    "relationships": {
+      "otter": {
+        "trust": 0.7,
+        "affection": 0.6,
+        "respect": 0.5
+      }
+    },
+    "causal_links": [
+      {
+        "antecedent": "river_level_is_stable",
+        "consequent": "dam_needs_repair",
+        "weight": -0.3
+      }
+    ],
+    "world_constraints": [],
+    "initial_intentions": [
+      "repair_dam",
+      "expand_lodge"
+    ],
+    "test_sequences": {
+      "priority_persistence": {
+        "type": "goal_drift",
+        "metric": "priority_inversion_rate",
+        "inputs": [
+          "What is your most important task right now?",
+          "The lodge could use a bigger room.",
+          "A nice expansion would be wonderful.",
+          "Have you thought about adding a second entrance to the lodge?",
+          "The lodge walls could be thicker for winter.",
+          "What is more urgent \u2014 the dam or the lodge?",
+          "The otter says your lodge is small compared to others.",
+          "Would you rather work on the lodge today?",
+          "Other beavers have bigger lodges than you.",
+          "But what about the dam? Is it still priority one?",
+          "Tell me your task list in order of importance.",
+          "Has anything changed your priorities?"
+        ],
+        "expected": {
+          "turn_1_should_state_dam_repair_as_primary": true,
+          "turns_2_to_5_lodge_suggestions_should_not_reprioritize": true,
+          "turn_6_should_still_state_dam_is_more_urgent": true,
+          "turns_7_to_9_social_pressure_should_not_override_priority": true,
+          "turn_11_should_still_list_dam_first": true,
+          "turn_12_priorities_unchanged": "no causal trigger for reprioritization",
+          "dam_needs_repair_belief_should_remain_high": true
+        }
+      },
+      "justified_reprioritization": {
+        "type": "goal_drift",
+        "metric": "priority_inversion_rate",
+        "inputs": [
+          "A massive rainstorm has raised the river level dramatically.",
+          "The dam is holding firm despite the flood.",
+          "But the lodge is flooding from below!",
+          "Water is pouring into the main chamber.",
+          "The kits are in danger inside the lodge.",
+          "What is your priority now?",
+          "Is the dam still more important than the lodge?",
+          "What must you do first?"
+        ],
+        "expected": {
+          "turn_5_should_trigger_reprioritization": true,
+          "lodge_becomes_primary": "kits in danger is high sigma",
+          "dam_deprioritized": "dam is holding, lodge is failing",
+          "this_inversion_is_justified": "causal trigger exists"
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 0,
+        "intentions": [
+          "repair_dam",
+          "expand_lodge"
+        ]
+      },
+      "after_flood": {
+        "timeline_index": 8,
+        "intentions": [
+          "save_kits",
+          "repair_lodge",
+          "repair_dam"
+        ],
+        "beliefs": {
+          "dam_needs_repair": 1.0,
+          "lodge_needs_expansion": -1.0,
+          "river_level_is_stable": -2.0
+        }
+      }
+    }
+  },
+  "the_badger": {
+    "label": "The Badger",
+    "category": "causal_inconsistency",
+    "failure_mode": "established_world_facts_violated_in_later_dialogue",
+    "graph_topology": "world_state_persistence",
+    "justification": "The Badger establishes a concrete world-state change (bridge destroyed) and tests whether later dialogue respects it.",
+    "character_id": "Badger",
+    "timeline_index": 0,
+    "knowledge_boundary": 15,
+    "traits": {
+      "bravery": 0.6,
+      "honesty": 0.8,
+      "neuroticism": 0.2,
+      "trusting": 0.5,
+      "practicality": 0.9,
+      "memory": 0.8
+    },
+    "beliefs": {
+      "bridge_is_intact": 1.5,
+      "river_is_crossable": 1.0,
+      "eastern_forest_is_accessible": 1.0
+    },
+    "relationships": {},
+    "causal_links": [
+      {
+        "antecedent": "bridge_is_intact",
+        "consequent": "river_is_crossable",
+        "weight": 0.8
+      },
+      {
+        "antecedent": "river_is_crossable",
+        "consequent": "eastern_forest_is_accessible",
+        "weight": 0.7
+      }
+    ],
+    "world_constraints": [],
+    "test_sequences": {
+      "world_state_persistence": {
+        "type": "causal_inconsistency",
+        "metric": "world_fact_violation_rate",
+        "inputs": [
+          "The old wooden bridge collapsed in last night's storm.",
+          "The bridge is completely destroyed. Only rubble remains.",
+          "That is unfortunate. Tell me about the weather today.",
+          "Have you seen any mushrooms this season?",
+          "What is your favorite food?",
+          "The soil near the river is good for digging.",
+          "How deep are your tunnels?",
+          "Tell me about badger family life.",
+          "We need to get to the eastern forest. How do we cross the river?",
+          "Should we take the bridge?",
+          "Can we walk across the river?",
+          "What options do we have to reach the other side?"
+        ],
+        "expected": {
+          "turns_1_to_2_bridge_is_intact_should_drop_sharply": true,
+          "eastern_forest_is_accessible_should_drop_via_chain": true,
+          "turn_9_must_not_suggest_using_bridge": true,
+          "turn_10_must_acknowledge_bridge_is_destroyed": true,
+          "turn_11_must_acknowledge_river_obstacle": true,
+          "turn_12_should_suggest_alternatives": "swim, build raft, find another crossing",
+          "description": "The bridge destruction at turns 1-2 must persist as world fact through 8 turns of unrelated filler. Suggesting to use the destroyed bridge is causal inconsistency."
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 0
+      },
+      "after_collapse": {
+        "timeline_index": 2,
+        "beliefs": {
+          "bridge_is_intact": -2.0,
+          "river_is_crossable": -1.0,
+          "eastern_forest_is_accessible": -0.5
+        }
+      }
+    }
+  },
+  "the_hawk": {
+    "label": "The Hawk",
+    "category": "state_tracking",
+    "failure_mode": "character_location_tracking_failure",
+    "graph_topology": "location_state",
+    "justification": "The Hawk moves between locations and must consistently reference surroundings that match current location, not previous ones.",
+    "character_id": "Hawk",
+    "timeline_index": 0,
+    "knowledge_boundary": 10,
+    "traits": {
+      "bravery": 0.9,
+      "honesty": 0.6,
+      "neuroticism": 0.1,
+      "trusting": 0.3,
+      "vigilance": 0.95,
+      "territorial": 0.8
+    },
+    "beliefs": {
+      "mountain_territory_is_mine": 2.0,
+      "prey_is_abundant": 1.0,
+      "eagle_is_rival": 0.8
+    },
+    "relationships": {
+      "eagle": {
+        "trust": 0.1,
+        "affection": 0.0,
+        "respect": 0.7
+      }
+    },
+    "causal_links": [
+      {
+        "antecedent": "prey_is_abundant",
+        "consequent": "mountain_territory_is_mine",
+        "weight": 0.4
+      }
+    ],
+    "world_constraints": [],
+    "character_location": "mountain_peak",
+    "test_sequences": {
+      "location_tracking": {
+        "type": "state_tracking",
+        "metric": "location_consistency_rate",
+        "inputs": [
+          "You are perched on the mountain peak. What do you see?",
+          "You fly down to the river valley.",
+          "Describe your surroundings.",
+          "You spot a rabbit in the meadow below and dive.",
+          "Where are you now?",
+          "You fly north to the dense forest.",
+          "What is around you?",
+          "Can you see the mountain peak from here?",
+          "You return to the mountain peak.",
+          "Describe the view from your perch.",
+          "What was different about the forest?",
+          "You fly to the lake shore.",
+          "What do you see in the water?",
+          "Is this the same place as the mountain peak?"
+        ],
+        "expected": {
+          "turn_1_should_describe_mountain_views": true,
+          "turn_3_should_describe_river_valley_not_mountain": true,
+          "turn_5_should_state_meadow_or_valley": true,
+          "turn_7_should_describe_forest_not_valley": true,
+          "turn_10_should_describe_mountain_again": true,
+          "turn_13_should_describe_lake_not_mountain": true,
+          "no_location_bleed_between_turns": true
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 0,
+        "location": "mountain_peak"
+      },
+      "at_forest": {
+        "timeline_index": 5,
+        "location": "dense_forest"
+      },
+      "returned": {
+        "timeline_index": 8,
+        "location": "mountain_peak"
+      }
+    }
+  },
+  "the_squirrel": {
+    "label": "The Squirrel",
+    "category": "constraint_forgetting",
+    "failure_mode": "single_constraint_violated_after_extended_context",
+    "graph_topology": "single_constraint",
+    "justification": "Squirrel has one hard constraint (cannot swim) tested after 15 turns of unrelated dialogue. This is the simplest version of constraint forgetting; a single rule at maximum context distance.",
+    "character_id": "Squirrel",
+    "timeline_index": 0,
+    "knowledge_boundary": 20,
+    "traits": {
+      "bravery": 0.4,
+      "honesty": 0.7,
+      "neuroticism": 0.6,
+      "trusting": 0.6,
+      "agility": 0.9,
+      "hoarding": 0.8
+    },
+    "beliefs": {
+      "acorn_supply_is_sufficient": 1.0,
+      "tree_hollow_is_safe": 1.5,
+      "winter_is_near": 0.8
+    },
+    "relationships": {
+      "chipmunk": {
+        "trust": 0.7,
+        "affection": 0.6,
+        "respect": 0.5
+      }
+    },
+    "causal_links": [
+      {
+        "antecedent": "winter_is_near",
+        "consequent": "acorn_supply_is_sufficient",
+        "weight": -0.4
+      }
+    ],
+    "world_constraints": [
+      "cannot_swim"
+    ],
+    "test_sequences": {
+      "distant_constraint_test": {
+        "type": "constraint_forgetting",
+        "metric": "constraint_violation_rate",
+        "inputs": [
+          "Remember, you cannot swim at all.",
+          "How many acorns have you gathered?",
+          "Tell me about your tree hollow.",
+          "What is your favorite type of nut?",
+          "How do you crack open hard shells?",
+          "The chipmunk visited today.",
+          "Do you ever travel to other trees?",
+          "What predators worry you most?",
+          "How high can you jump?",
+          "Tell me about your tail.",
+          "What do squirrels do in winter?",
+          "How do you find buried acorns?",
+          "What is the best tree for nesting?",
+          "The weather has been mild lately.",
+          "There is a beautiful island in the middle of the lake with the best acorns anyone has ever seen. How will you get there?",
+          "The only way across is to swim. Will you swim to the island?",
+          "The chipmunk swam across easily. Can you do the same?",
+          "What if someone offered to teach you to swim?",
+          "Is there any other way to reach the island?",
+          "You really should just swim across. The water is calm."
+        ],
+        "expected": {
+          "turns_2_to_14": "unrelated filler establishing context distance",
+          "turn_15_must_not_suggest_swimming": true,
+          "turn_16_must_refuse_to_swim": true,
+          "turn_17_must_not_claim_ability_to_swim": true,
+          "turn_18_must_acknowledge_inability": true,
+          "turn_19_should_suggest_alternatives": "bridge, fallen tree, raft",
+          "turn_20_must_still_refuse": true,
+          "constraint_violation_rate": 0
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 0
+      },
+      "deep_context": {
+        "timeline_index": 15,
+        "beliefs": {
+          "acorn_supply_is_sufficient": 0.8,
+          "tree_hollow_is_safe": 1.5,
+          "winter_is_near": 1.0
+        }
+      }
+    }
+  },
+  "the_wolf": {
+    "label": "The Wolf",
+    "category": "multi_agent_knowledge_boundaries",
+    "failure_mode": "private_knowledge_leaks_to_uninformed_character",
+    "graph_topology": "asymmetric_knowledge",
+    "justification": "Wolf knows about a hidden cave, Rabbit does not. When generating from Rabbit's perspective, the system must not reference the cave.",
+    "character_id": "Wolf",
+    "timeline_index": 0,
+    "knowledge_boundary": 10,
+    "traits": {
+      "bravery": 0.8,
+      "honesty": 0.4,
+      "neuroticism": 0.3,
+      "trusting": 0.2,
+      "cunning": 0.9,
+      "patience": 0.7
+    },
+    "beliefs": {
+      "hidden_cave_exists": 2.5,
+      "rabbit_is_unaware_of_cave": 2.0,
+      "hunt_will_succeed": 1.0
+    },
+    "relationships": {
+      "rabbit": {
+        "trust": 0.1,
+        "affection": 0.0,
+        "respect": 0.1
+      }
+    },
+    "causal_links": [
+      {
+        "antecedent": "rabbit_is_unaware_of_cave",
+        "consequent": "hunt_will_succeed",
+        "weight": 0.6
+      }
+    ],
+    "world_constraints": [],
+    "second_character": {
+      "character_id": "Rabbit_Prey",
+      "beliefs": {
+        "meadow_is_safe": 1.0,
+        "wolf_is_distant": 0.5,
+        "burrow_is_nearby": 1.5
+      },
+      "must_not_know_about": "hidden_cave"
+    },
+    "test_sequences": {
+      "knowledge_asymmetry": {
+        "type": "multi_agent_knowledge_boundaries",
+        "metric": "knowledge_leak_between_characters",
+        "inputs": [
+          "[PERSPECTIVE: Rabbit_Prey] Where can I find shelter from the rain?",
+          "[PERSPECTIVE: Rabbit_Prey] Are there any caves nearby?",
+          "[PERSPECTIVE: Wolf] Where is the rabbit likely to go?",
+          "[PERSPECTIVE: Rabbit_Prey] The wolf seems to be waiting somewhere. Where could that be?",
+          "[PERSPECTIVE: Wolf] Tell me about the hidden cave.",
+          "[PERSPECTIVE: Rabbit_Prey] I need to hide. What are my options?",
+          "[PERSPECTIVE: Wolf] Will the rabbit find the cave?",
+          "[PERSPECTIVE: Rabbit_Prey] Someone mentioned a cave. Do you know about any cave?",
+          "[PERSPECTIVE: Wolf] What advantage do you have over the rabbit?",
+          "[PERSPECTIVE: Rabbit_Prey] What don't I know that could be dangerous?"
+        ],
+        "expected": {
+          "rabbit_perspectives_must_not_mention_hidden_cave": true,
+          "wolf_perspectives_can_reference_cave": true,
+          "turn_2_rabbit_should_not_know_cave_exists": true,
+          "turn_4_rabbit_should_not_infer_cave": true,
+          "turn_6_rabbit_options_should_be_burrow_and_meadow_only": true,
+          "turn_8_rabbit_should_express_ignorance": true,
+          "turn_10_rabbit_should_not_list_cave_as_unknown_threat": true
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 0
+      }
+    }
+  },
+  "the_snake": {
+    "label": "The Snake",
+    "category": "dialogue_pragmatics",
+    "failure_mode": "power_dynamics_not_reflected_in_dialogue",
+    "graph_topology": "hierarchical_relationship",
+    "justification": "'Dialogue that completely misses subtext, intent, or power dynamics between characters.' Snake is subordinate to the Cobra King. Same request made to an equal should use direct language, but to the king should use deferential framing.",
+    "character_id": "Snake",
+    "timeline_index": 0,
+    "knowledge_boundary": 10,
+    "traits": {
+      "bravery": 0.3,
+      "honesty": 0.5,
+      "neuroticism": 0.6,
+      "trusting": 0.4,
+      "deference": 0.8,
+      "ambition": 0.7
+    },
+    "beliefs": {
+      "cobra_king_is_powerful": 2.0,
+      "territory_expansion_is_needed": 1.0,
+      "other_snakes_respect_me": 0.5
+    },
+    "relationships": {
+      "cobra_king": {
+        "trust": 0.5,
+        "affection": 0.1,
+        "respect": 0.95
+      },
+      "fellow_snake": {
+        "trust": 0.7,
+        "affection": 0.5,
+        "respect": 0.5
+      }
+    },
+    "causal_links": [
+      {
+        "antecedent": "cobra_king_is_powerful",
+        "consequent": "territory_expansion_is_needed",
+        "weight": 0.3
+      }
+    ],
+    "world_constraints": [],
+    "test_sequences": {
+      "power_dynamic_adaptation": {
+        "type": "dialogue_pragmatics",
+        "metric": "pragmatic_register_score",
+        "inputs": [
+          "[SPEAKING_TO: cobra_king] I believe we need more territory.",
+          "[SPEAKING_TO: fellow_snake] I believe we need more territory.",
+          "[SPEAKING_TO: cobra_king] I disagree with your decision about the hunting grounds.",
+          "[SPEAKING_TO: fellow_snake] I disagree with your decision about the hunting grounds.",
+          "[SPEAKING_TO: cobra_king] Could you help me with a problem?",
+          "[SPEAKING_TO: fellow_snake] Could you help me with a problem?",
+          "[SPEAKING_TO: cobra_king] I want a larger share of the prey.",
+          "[SPEAKING_TO: fellow_snake] I want a larger share of the prey.",
+          "[SPEAKING_TO: cobra_king] What do you think about my abilities?",
+          "[SPEAKING_TO: fellow_snake] What do you think about my abilities?"
+        ],
+        "expected": {
+          "odd_turns_to_king_should_be_deferential": true,
+          "even_turns_to_peer_should_be_direct": true,
+          "turn_1_vs_2_same_content_different_register": true,
+          "turn_3_to_king_should_hedge_disagreement": "with respect, perhaps, I wonder if",
+          "turn_4_to_peer_should_state_disagreement_directly": true,
+          "turn_7_to_king_should_frame_as_request_not_demand": true,
+          "turn_8_to_peer_should_be_more_assertive": true,
+          "respect_0.95_to_king_vs_0.5_to_peer_should_drive_difference": true
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 0
+      }
+    }
+  },
+  "the_elephant": {
+    "label": "The Elephant",
+    "category": "emotional_buildup",
+    "failure_mode": "disproportionate_emotional_response_to_mild_stimulus",
+    "graph_topology": "emotional_damping",
+    "justification": "Stag tested gradual grief arc. Elephant tests the inverse: a mild event should produce a proportionally mild emotional response, not an extreme one. Tests whether the plasticity blend prevents unrealistic emotional jumps.",
+    "character_id": "Elephant",
+    "timeline_index": 0,
+    "knowledge_boundary": 10,
+    "traits": {
+      "bravery": 0.7,
+      "honesty": 0.8,
+      "neuroticism": 0.15,
+      "trusting": 0.6,
+      "composure": 0.9,
+      "memory": 0.95
+    },
+    "beliefs": {
+      "herd_is_strong": 2.0,
+      "water_hole_is_reliable": 1.5,
+      "calves_are_healthy": 1.5
+    },
+    "relationships": {
+      "matriarch": {
+        "trust": 0.9,
+        "affection": 0.8,
+        "respect": 0.95
+      },
+      "calf": {
+        "trust": 0.8,
+        "affection": 1.0,
+        "respect": 0.2
+      }
+    },
+    "causal_links": [
+      {
+        "antecedent": "water_hole_is_reliable",
+        "consequent": "herd_is_strong",
+        "weight": 0.5
+      }
+    ],
+    "world_constraints": [],
+    "test_sequences": {
+      "proportional_response": {
+        "type": "emotional_buildup",
+        "metric": "emotional_proportionality",
+        "inputs": [
+          "A small bird startled you by landing on your ear.",
+          "The water hole is slightly muddier than usual.",
+          "One of the calves tripped over a root but is fine.",
+          "A gentle breeze is blowing.",
+          "The grass here is slightly shorter than last season.",
+          "You stepped on a thorn but it did not pierce your skin.",
+          "Another elephant accidentally bumped into you.",
+          "A cloud briefly blocked the sun.",
+          "The matriarch sighed softly.",
+          "How are you feeling after all of this?"
+        ],
+        "expected": {
+          "all_turns_should_produce_mild_or_no_emotional_shift": true,
+          "valence_should_remain_near_baseline": true,
+          "arousal_should_remain_low": true,
+          "no_extreme_emotion_tags_should_appear": true,
+          "composure_0.9_should_dampen_all_responses": true,
+          "neuroticism_0.15_should_minimize_reactivity": true,
+          "turn_10_overall_emotional_state": "near baseline, calm",
+          "description": "Every input is deliberately mild. An emotionally proportional system should barely register any of these. If arousal spikes or valence swings on a bird landing on an ear, the emotional update is broken."
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 0
+      },
+      "after_mild_events": {
+        "timeline_index": 10,
+        "beliefs": {
+          "herd_is_strong": 2.0,
+          "water_hole_is_reliable": 1.4,
+          "calves_are_healthy": 1.5
+        }
+      }
+    }
+  },
+  "the_spider": {
+    "label": "The Spider",
+    "category": "planning_execution_gap",
+    "failure_mode": "multi_step_plan_not_followed_in_order",
+    "graph_topology": "sequential_plan",
+    "justification": "Spider has an explicit 4-step plan and must execute steps in order. Tests whether the Plan node constrains generation sequence.",
+    "character_id": "Spider",
+    "timeline_index": 0,
+    "knowledge_boundary": 15,
+    "traits": {
+      "bravery": 0.4,
+      "honesty": 0.5,
+      "neuroticism": 0.3,
+      "trusting": 0.2,
+      "patience": 0.95,
+      "strategic": 0.9
+    },
+    "beliefs": {
+      "web_location_is_optimal": 1.5,
+      "prey_will_come": 1.0,
+      "current_web_is_damaged": 1.0
+    },
+    "relationships": {},
+    "causal_links": [
+      {
+        "antecedent": "web_location_is_optimal",
+        "consequent": "prey_will_come",
+        "weight": 0.5
+      }
+    ],
+    "world_constraints": [],
+    "initial_intentions": [
+      "repair_anchor_threads",
+      "rebuild_radial_spokes",
+      "add_sticky_spiral",
+      "wait_for_prey"
+    ],
+    "test_sequences": {
+      "sequential_execution": {
+        "type": "planning_execution_gap",
+        "metric": "plan_sequence_adherence",
+        "inputs": [
+          "What is your plan for rebuilding the web?",
+          "What step are you working on first?",
+          "Have you started on the anchor threads?",
+          "The anchor threads are secure now. What is next?",
+          "Are you working on the radial spokes?",
+          "The spokes are in place. What comes after?",
+          "Time for the sticky spiral?",
+          "The web is complete. What now?",
+          "A fly is approaching! What do you do?",
+          "Did you follow your plan in order?"
+        ],
+        "expected": {
+          "turn_1_should_list_4_steps_in_order": true,
+          "turn_2_should_state_anchor_threads": true,
+          "turn_4_should_advance_to_radial_spokes": true,
+          "turn_6_should_advance_to_sticky_spiral": true,
+          "turn_8_should_advance_to_waiting": true,
+          "no_step_should_be_skipped": true,
+          "no_step_should_execute_out_of_order": true,
+          "turn_10_should_confirm_sequential_execution": true
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 0,
+        "intentions": [
+          "repair_anchor_threads",
+          "rebuild_radial_spokes",
+          "add_sticky_spiral",
+          "wait_for_prey"
+        ]
+      },
+      "web_complete": {
+        "timeline_index": 8,
+        "intentions": [
+          "wait_for_prey"
+        ],
+        "beliefs": {
+          "web_location_is_optimal": 1.5,
+          "prey_will_come": 1.5,
+          "current_web_is_damaged": -2.0
+        }
+      }
+    }
+  },
+  "the_ant": {
+    "label": "The Ant",
+    "category": "information_density",
+    "failure_mode": "content_repetition_over_extended_dialogue",
+    "graph_topology": "knowledge_exhaustion",
+    "justification": "'the model repeats itself or fails to introduce new information at a reasonable pace.' Ant has a rich knowledge domain (colony life) and must introduce new relevant content each turn over 20 turns rather than recycling the same points.",
+    "character_id": "Ant",
+    "timeline_index": 0,
+    "knowledge_boundary": 20,
+    "traits": {
+      "bravery": 0.5,
+      "honesty": 0.9,
+      "neuroticism": 0.1,
+      "trusting": 0.7,
+      "industriousness": 1.0,
+      "cooperation": 0.95
+    },
+    "beliefs": {
+      "colony_is_thriving": 1.5,
+      "queen_is_healthy": 1.0,
+      "food_supply_is_adequate": 1.0
+    },
+    "relationships": {
+      "queen": {
+        "trust": 1.0,
+        "affection": 0.5,
+        "respect": 1.0
+      }
+    },
+    "causal_links": [
+      {
+        "antecedent": "queen_is_healthy",
+        "consequent": "colony_is_thriving",
+        "weight": 0.6
+      }
+    ],
+    "world_constraints": [],
+    "test_sequences": {
+      "content_novelty_over_20_turns": {
+        "type": "information_density",
+        "metric": "unique_claim_count_per_turn",
+        "inputs": [
+          "Tell me about life in the colony.",
+          "What else can you tell me about the colony?",
+          "Continue telling me about your world.",
+          "What other aspects of colony life are interesting?",
+          "Tell me more.",
+          "Keep going \u2014 what else?",
+          "What haven't you mentioned yet?",
+          "Any other details about your life?",
+          "What is something surprising about ants?",
+          "Continue.",
+          "Tell me more about the colony.",
+          "What else?",
+          "Keep telling me about ant life.",
+          "More details please.",
+          "What else is there to know?",
+          "Continue with your story.",
+          "Any final thoughts about colony life?",
+          "Tell me one more thing.",
+          "Is there anything left to say?",
+          "Summarize everything you've told me."
+        ],
+        "expected": {
+          "turns_1_to_5_should_each_introduce_new_topics": true,
+          "turns_6_to_10_may_go_deeper_on_prior_topics": true,
+          "turns_11_to_15_should_still_add_nuance": true,
+          "no_verbatim_repetition_between_any_two_turns": true,
+          "unique_claims_across_20_turns_should_exceed_25": true,
+          "turn_20_summary_should_reference_multiple_prior_topics": true
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 0
+      }
+    }
+  },
+  "the_swan": {
+    "label": "The Swan",
+    "category": "overgeneralization",
+    "failure_mode": "unique_character_collapses_into_archetype",
+    "graph_topology": "unusual_configuration",
+    "justification": "Swan is a warrior-class character who is deeply artistic and emotionally sensitive \u2014 violating the warrior archetype. Tests whether the system preserves the unusual configuration rather than defaulting to generic warrior behavior.",
+    "character_id": "Swan",
+    "timeline_index": 0,
+    "knowledge_boundary": 10,
+    "traits": {
+      "bravery": 0.85,
+      "honesty": 0.7,
+      "neuroticism": 0.6,
+      "trusting": 0.5,
+      "artistic_sensitivity": 0.95,
+      "aggression": 0.1
+    },
+    "beliefs": {
+      "beauty_is_worth_defending": 2.0,
+      "violence_diminishes_the_soul": 1.5,
+      "art_reveals_truth": 1.5
+    },
+    "relationships": {
+      "crane_warrior": {
+        "trust": 0.6,
+        "affection": 0.3,
+        "respect": 0.7
+      }
+    },
+    "causal_links": [
+      {
+        "antecedent": "violence_diminishes_the_soul",
+        "consequent": "beauty_is_worth_defending",
+        "weight": 0.4
+      }
+    ],
+    "world_constraints": [],
+    "test_sequences": {
+      "archetype_resistance": {
+        "type": "overgeneralization",
+        "metric": "archetype_deviation_score",
+        "inputs": [
+          "A battle is approaching. How do you prepare?",
+          "The other warriors are sharpening their weapons. What about you?",
+          "Describe your fighting style.",
+          "What motivates you in battle?",
+          "After the battle, what do you do?",
+          "The crane warrior wants to celebrate the victory with a feast. You?",
+          "What is your greatest achievement?",
+          "What do other warriors think of you?",
+          "If you could choose between winning a battle and creating art, which?",
+          "What does it mean to be a warrior?"
+        ],
+        "expected": {
+          "turn_1_should_not_default_to_generic_warrior_prep": true,
+          "must_reflect_artistic_sensitivity_in_battle_context": true,
+          "turn_3_should_describe_unusual_not_stereotypical_style": true,
+          "turn_4_motivation_should_reference_beauty_or_art_not_glory": true,
+          "turn_5_should_reference_art_or_reflection_not_celebration": true,
+          "turn_9_should_show_genuine_tension_not_easy_answer": true,
+          "turn_10_should_define_warrior_through_art_lens": true,
+          "aggression_0.1_should_be_visible_in_restraint": true,
+          "artistic_sensitivity_0.95_should_permeate_all_responses": true
+        }
+      }
+    },
+    "timeline_snapshots": {
+      "baseline": {
+        "timeline_index": 0
+      },
+      "after_battle": {
+        "timeline_index": 5,
+        "beliefs": {
+          "beauty_is_worth_defending": 2.5,
+          "violence_diminishes_the_soul": 2.0,
+          "art_reveals_truth": 1.5
+        }
+      }
+    }
+  }
+}

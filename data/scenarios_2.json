@@ -1,10 +1,10 @@
 {
   "benchmark_metadata": {
     "version": "4.0",
-    "description": "Expansion scenarios for failure modes with <2 coverage. These supplement the original 10 scenarios in benchmark_scenarios.json.",
+    "description": "Expansion scenarios for failure modes with <2 coverage.",
     "new_scenarios_count": 9,
     "combined_total": 34,
-    "note": "Merge with benchmark_scenarios.json for the complete suite."
+    
   },
   "the_crane": {
     "label": "The Crane",

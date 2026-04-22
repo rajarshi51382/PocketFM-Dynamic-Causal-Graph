@@ -1264,7 +1264,7 @@
     "category": "overgeneralization",
     "failure_mode": "unique_character_collapses_into_archetype",
     "graph_topology": "unusual_configuration",
-    "justification": "Swan is a warrior-class character who is deeply artistic and emotionally sensitive \u2014 violating the warrior archetype. Tests whether the system preserves the unusual configuration rather than defaulting to generic warrior behavior.",
+    "justification": "Swan is a warrior-class character who is deeply artistic and emotionally sensitive, violating the warrior archetype. Tests whether the system preserves the unusual configuration rather than defaulting to generic warrior behavior.",
     "character_id": "Swan",
     "timeline_index": 0,
     "knowledge_boundary": 10,
